@@ -1,0 +1,539 @@
+/* =========================================================
+   FOTOĞRAF TETRİS
+   Her düşen parça rastgele bir fotoğrafla gelir.
+   ========================================================= */
+
+const Tetris = (() => {
+  const SUTUN = 10;
+  const SATIR = 20;
+  const TEMIZLEME_SURESI = 260; // satır silinirken yanıp sönme süresi (ms)
+
+  const SEKILLER = {
+    I: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+    J: [[1,0,0],[1,1,1],[0,0,0]],
+    L: [[0,0,1],[1,1,1],[0,0,0]],
+    O: [[1,1],[1,1]],
+    S: [[0,1,1],[1,1,0],[0,0,0]],
+    T: [[0,1,0],[1,1,1],[0,0,0]],
+    Z: [[1,1,0],[0,1,1],[0,0,0]],
+  };
+
+  const PUANLAR = [0, 100, 300, 500, 800];
+
+  let tuval, ctx, siradakiTuval, sctx;
+  let hucre = 33;
+  let tahta = [];
+  let parca = null;
+  let siradaki = null;
+  let torba = [];
+  let skor = 0, satirSayisi = 0, seviye = 1;
+  let rekor = Kayit.al("tetrisRekor", 0);
+  let duraklat = false, bitti = false, aktif = false;
+  let raf = null, sonZaman = 0;
+  let dusmeSayaci = 0;
+  let temizlenenSatirlar = null, temizlemeSayaci = 0;
+  let yon = 0, dasSayaci = 0, asagiBasili = false, yumusakSayaci = 0;
+  let sonFoto = -1;
+
+  /* ------------------------- çizim yardımcıları ------------------------- */
+
+  function yuvarlakYol(c, x, y, g, y2, r) {
+    c.beginPath();
+    if (c.roundRect) { c.roundRect(x, y, g, y2, r); return; }
+    c.moveTo(x + r, y);
+    c.arcTo(x + g, y, x + g, y + y2, r);
+    c.arcTo(x + g, y + y2, x, y + y2, r);
+    c.arcTo(x, y + y2, x, y, r);
+    c.arcTo(x, y, x + g, y, r);
+    c.closePath();
+  }
+
+  function hucreCiz(c, x, y, boyut, fotoIdx, alfa = 1) {
+    const bosluk = Math.max(1, boyut * 0.055);
+    const bx = x + bosluk / 2, by = y + bosluk / 2, bb = boyut - bosluk;
+    const r = Math.max(3, boyut * 0.17);
+    const img = TILE_IMG[fotoIdx % TILE_IMG.length];
+
+    c.save();
+    c.globalAlpha = alfa;
+    yuvarlakYol(c, bx, by, bb, bb, r);
+    c.clip();
+
+    if (img && img.complete && img.naturalWidth) {
+      c.drawImage(img, bx, by, bb, bb);
+    } else {
+      c.fillStyle = "#ff6b9d";
+      c.fillRect(bx, by, bb, bb);
+    }
+
+    // hafif hacim hissi — fotoğrafı boğmayacak kadar ince
+    const gr = c.createLinearGradient(bx, by, bx, by + bb);
+    gr.addColorStop(0, "rgba(255,255,255,0.16)");
+    gr.addColorStop(0.35, "rgba(255,255,255,0)");
+    gr.addColorStop(1, "rgba(0,0,0,0.22)");
+    c.fillStyle = gr;
+    c.fillRect(bx, by, bb, bb);
+    c.restore();
+
+    c.save();
+    c.globalAlpha = alfa * 0.7;
+    yuvarlakYol(c, bx, by, bb, bb, r);
+    c.strokeStyle = "rgba(255,255,255,0.28)";
+    c.lineWidth = Math.max(1, boyut * 0.03);
+    c.stroke();
+    c.restore();
+  }
+
+  /* ------------------------- tahta / parça ------------------------- */
+
+  function bosTahta() {
+    return Array.from({ length: SATIR }, () => new Array(SUTUN).fill(null));
+  }
+
+  function sonrakiTip() {
+    if (!torba.length) torba = karistir(Object.keys(SEKILLER));
+    return torba.pop();
+  }
+
+  function yeniParca() {
+    const tip = sonrakiTip();
+    const sekil = SEKILLER[tip].map((s) => s.slice());
+    let foto = rastgele(FOTOLAR.length);
+    if (FOTOLAR.length > 1) {
+      while (foto === sonFoto) foto = rastgele(FOTOLAR.length);
+    }
+    sonFoto = foto;
+    return {
+      tip,
+      sekil,
+      foto,
+      x: Math.floor((SUTUN - sekil[0].length) / 2),
+      y: tip === "I" ? -1 : 0,
+    };
+  }
+
+  function carpisiyorMu(sekil, px, py) {
+    for (let r = 0; r < sekil.length; r++) {
+      for (let s = 0; s < sekil[r].length; s++) {
+        if (!sekil[r][s]) continue;
+        const x = px + s, y = py + r;
+        if (x < 0 || x >= SUTUN || y >= SATIR) return true;
+        if (y >= 0 && tahta[y][x] !== null) return true;
+      }
+    }
+    return false;
+  }
+
+  function dondurulmus(sekil) {
+    const n = sekil.length;
+    const yeni = Array.from({ length: n }, () => new Array(n).fill(0));
+    for (let r = 0; r < n; r++) {
+      for (let s = 0; s < n; s++) yeni[s][n - 1 - r] = sekil[r][s];
+    }
+    return yeni;
+  }
+
+  function dondur() {
+    if (!parca || duraklat || bitti || temizlenenSatirlar) return;
+    const yeni = dondurulmus(parca.sekil);
+    for (const kaydir of [0, -1, 1, -2, 2]) {
+      if (!carpisiyorMu(yeni, parca.x + kaydir, parca.y)) {
+        parca.sekil = yeni;
+        parca.x += kaydir;
+        Ses.dondur();
+        return;
+      }
+    }
+  }
+
+  function hareketEt(dx) {
+    if (!parca || duraklat || bitti || temizlenenSatirlar) return;
+    if (!carpisiyorMu(parca.sekil, parca.x + dx, parca.y)) {
+      parca.x += dx;
+      Ses.kaydir();
+    }
+  }
+
+  function asagiKaydir(elle) {
+    if (!parca || duraklat || bitti || temizlenenSatirlar) return;
+    if (!carpisiyorMu(parca.sekil, parca.x, parca.y + 1)) {
+      parca.y++;
+      if (elle) skor += 1;
+    } else {
+      kilitle();
+    }
+    dusmeSayaci = 0;
+  }
+
+  function anindaBirak() {
+    if (!parca || duraklat || bitti || temizlenenSatirlar) return;
+    let mesafe = 0;
+    while (!carpisiyorMu(parca.sekil, parca.x, parca.y + 1)) {
+      parca.y++;
+      mesafe++;
+    }
+    skor += mesafe * 2;
+    Ses.dus();
+    kilitle();
+  }
+
+  function kilitle() {
+    for (let r = 0; r < parca.sekil.length; r++) {
+      for (let s = 0; s < parca.sekil[r].length; s++) {
+        if (!parca.sekil[r][s]) continue;
+        const x = parca.x + s, y = parca.y + r;
+        if (y < 0) { oyunBitti(); return; }
+        tahta[y][x] = parca.foto;
+      }
+    }
+
+    const dolular = [];
+    for (let r = 0; r < SATIR; r++) {
+      if (tahta[r].every((h) => h !== null)) dolular.push(r);
+    }
+
+    if (dolular.length) {
+      temizlenenSatirlar = dolular;
+      temizlemeSayaci = TEMIZLEME_SURESI;
+      Ses.satir(dolular.length);
+      parca = null;
+    } else {
+      parcaVer();
+    }
+    bilgiGuncelle();
+  }
+
+  function satirlariKaldir() {
+    const eskiSeviye = seviye;
+    for (const r of temizlenenSatirlar) {
+      tahta.splice(r, 1);
+      tahta.unshift(new Array(SUTUN).fill(null));
+    }
+    skor += PUANLAR[Math.min(temizlenenSatirlar.length, 4)] * seviye;
+    satirSayisi += temizlenenSatirlar.length;
+    seviye = Math.floor(satirSayisi / 10) + 1;
+    if (seviye > eskiSeviye) Ses.seviye();
+    temizlenenSatirlar = null;
+    bilgiGuncelle();
+    parcaVer();
+  }
+
+  function parcaVer() {
+    parca = siradaki || yeniParca();
+    siradaki = yeniParca();
+    siradakiCiz();
+    if (carpisiyorMu(parca.sekil, parca.x, parca.y)) oyunBitti();
+  }
+
+  function dusmeAraligi() {
+    return Math.max(85, 900 - (seviye - 1) * 78);
+  }
+
+  /* ------------------------- durum / arayüz ------------------------- */
+
+  function bilgiGuncelle() {
+    document.getElementById("tetrisSkor").textContent = skor;
+    document.getElementById("tetrisSeviye").textContent = seviye;
+    document.getElementById("tetrisSatir").textContent = satirSayisi;
+    if (skor > rekor) {
+      rekor = skor;
+      Kayit.yaz("tetrisRekor", rekor);
+    }
+    document.getElementById("tetrisRekor").textContent = rekor;
+  }
+
+  function katmanGoster(baslik, metin, dugme, skorGoster = false) {
+    document.getElementById("tetrisKatmanBaslik").textContent = baslik;
+    document.getElementById("tetrisKatmanMetin").textContent = metin;
+    document.getElementById("tetrisKatmanDugme").textContent = dugme;
+    const s = document.getElementById("tetrisKatmanSkor");
+    s.style.display = skorGoster ? "block" : "none";
+    s.textContent = skor;
+    document.getElementById("tetrisKatman").classList.add("acik");
+  }
+
+  function katmanGizle() {
+    document.getElementById("tetrisKatman").classList.remove("acik");
+  }
+
+  function oyunBitti() {
+    bitti = true;
+    parca = null;
+    Ses.bitti();
+    bilgiGuncelle();
+    katmanGoster("Oyun bitti 💔", "Bir daha deneyelim mi?", "Yeni Oyun", true);
+  }
+
+  function duraklatAcKapa(zorla) {
+    if (bitti || !aktif) return;
+    duraklat = zorla === undefined ? !duraklat : zorla;
+    if (duraklat) katmanGoster("Duraklatıldı", "Kaldığın yerden devam edebilirsin", "Devam Et");
+    else katmanGizle();
+    document.getElementById("tetrisDuraklat").textContent = duraklat ? "Devam" : "Duraklat";
+  }
+
+  /* ------------------------- boyutlandırma ------------------------- */
+
+  function boyutlandir() {
+    if (!tuval) return;
+    const darEkran = window.innerWidth <= 760;
+    const dikeyPay = darEkran ? 330 : 180;
+    const yatayPay = darEkran ? 34 : 250;
+    const hY = Math.floor((window.innerHeight - dikeyPay) / SATIR);
+    const hX = Math.floor(Math.min(window.innerWidth - yatayPay, 420) / SUTUN);
+    // Ekran çok kısaysa tahtayı küçültmek yerine sayfanın kaymasına izin ver
+    hucre = Math.max(20, Math.min(hY, hX, 34));
+
+    const g = hucre * SUTUN, y = hucre * SATIR;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    tuval.style.width = g + "px";
+    tuval.style.height = y + "px";
+    tuval.width = Math.round(g * dpr);
+    tuval.height = Math.round(y * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ciz();
+  }
+
+  /* ------------------------- çizim ------------------------- */
+
+  function ciz() {
+    if (!ctx) return;
+    const g = hucre * SUTUN, y = hucre * SATIR;
+
+    ctx.clearRect(0, 0, g, y);
+    ctx.fillStyle = "rgba(0,0,0,0.30)";
+    ctx.fillRect(0, 0, g, y);
+
+    // ızgara
+    ctx.strokeStyle = "rgba(255,255,255,0.045)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let s = 1; s < SUTUN; s++) { ctx.moveTo(s * hucre + 0.5, 0); ctx.lineTo(s * hucre + 0.5, y); }
+    for (let r = 1; r < SATIR; r++) { ctx.moveTo(0, r * hucre + 0.5); ctx.lineTo(g, r * hucre + 0.5); }
+    ctx.stroke();
+
+    // yerleşmiş bloklar
+    for (let r = 0; r < SATIR; r++) {
+      for (let s = 0; s < SUTUN; s++) {
+        if (tahta[r][s] === null) continue;
+        hucreCiz(ctx, s * hucre, r * hucre, hucre, tahta[r][s]);
+      }
+    }
+
+    // silinen satırların parlaması
+    if (temizlenenSatirlar) {
+      const oran = temizlemeSayaci / TEMIZLEME_SURESI;
+      const parlaklik = Math.abs(Math.sin(oran * Math.PI * 3)) * 0.8;
+      ctx.fillStyle = `rgba(255,255,255,${parlaklik})`;
+      for (const r of temizlenenSatirlar) ctx.fillRect(0, r * hucre, g, hucre);
+    }
+
+    if (parca) {
+      // hayalet (nereye düşeceği)
+      let hy = parca.y;
+      while (!carpisiyorMu(parca.sekil, parca.x, hy + 1)) hy++;
+      if (hy !== parca.y) {
+        for (let r = 0; r < parca.sekil.length; r++) {
+          for (let s = 0; s < parca.sekil[r].length; s++) {
+            if (!parca.sekil[r][s]) continue;
+            const yy = hy + r;
+            if (yy < 0) continue;
+            hucreCiz(ctx, (parca.x + s) * hucre, yy * hucre, hucre, parca.foto, 0.2);
+          }
+        }
+      }
+      // parçanın kendisi
+      for (let r = 0; r < parca.sekil.length; r++) {
+        for (let s = 0; s < parca.sekil[r].length; s++) {
+          if (!parca.sekil[r][s]) continue;
+          const yy = parca.y + r;
+          if (yy < 0) continue;
+          hucreCiz(ctx, (parca.x + s) * hucre, yy * hucre, hucre, parca.foto);
+        }
+      }
+    }
+  }
+
+  function siradakiCiz() {
+    if (!sctx || !siradaki) return;
+    const g = siradakiTuval.width, y = siradakiTuval.height;
+    sctx.clearRect(0, 0, g, y);
+
+    const sekil = siradaki.sekil;
+    // parçanın dolu olduğu alanı bul
+    let minR = 9, maxR = -1, minS = 9, maxS = -1;
+    for (let r = 0; r < sekil.length; r++) {
+      for (let s = 0; s < sekil[r].length; s++) {
+        if (!sekil[r][s]) continue;
+        minR = Math.min(minR, r); maxR = Math.max(maxR, r);
+        minS = Math.min(minS, s); maxS = Math.max(maxS, s);
+      }
+    }
+    const gs = maxS - minS + 1, ys = maxR - minR + 1;
+    const b = Math.min((g - 20) / gs, (y - 20) / ys, 26);
+    const ox = (g - gs * b) / 2, oy = (y - ys * b) / 2;
+
+    for (let r = minR; r <= maxR; r++) {
+      for (let s = minS; s <= maxS; s++) {
+        if (!sekil[r][s]) continue;
+        hucreCiz(sctx, ox + (s - minS) * b, oy + (r - minR) * b, b, siradaki.foto);
+      }
+    }
+  }
+
+  /* ------------------------- döngü ------------------------- */
+
+  /* Oyunun bir adımı — geçen süre (ms) kadar ilerlet */
+  function guncelle(fark) {
+    if (duraklat || bitti) return;
+
+    if (temizlenenSatirlar) {
+      temizlemeSayaci -= fark;
+      if (temizlemeSayaci <= 0) satirlariKaldir();
+      return;
+    }
+
+    if (yon !== 0) {
+      dasSayaci -= fark;
+      if (dasSayaci <= 0) { hareketEt(yon); dasSayaci = 55; }
+    }
+    if (asagiBasili) {
+      yumusakSayaci -= fark;
+      if (yumusakSayaci <= 0) { asagiKaydir(true); yumusakSayaci = 45; bilgiGuncelle(); }
+    }
+    dusmeSayaci += fark;
+    if (dusmeSayaci > dusmeAraligi()) asagiKaydir(false);
+  }
+
+  function dongu(zaman) {
+    if (!aktif) return;
+    const fark = Math.min(zaman - sonZaman || 0, 100);
+    sonZaman = zaman;
+    guncelle(fark);
+    ciz();
+    raf = requestAnimationFrame(dongu);
+  }
+
+  /* ------------------------- girdi ------------------------- */
+
+  function tusBasildi(e) {
+    if (!aktif) return;
+    const t = e.key;
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " ", "Spacebar"].includes(t)) {
+      e.preventDefault();
+    }
+    if (t === "p" || t === "P") { duraklatAcKapa(); return; }
+    if (duraklat || bitti) return;
+
+    if (t === "ArrowLeft" && yon !== -1) { yon = -1; hareketEt(-1); dasSayaci = 170; }
+    else if (t === "ArrowRight" && yon !== 1) { yon = 1; hareketEt(1); dasSayaci = 170; }
+    else if (t === "ArrowUp") dondur();
+    else if (t === "ArrowDown") { if (!asagiBasili) { asagiBasili = true; asagiKaydir(true); yumusakSayaci = 90; } }
+    else if (t === " " || t === "Spacebar") { if (!e.repeat) anindaBirak(); }
+  }
+
+  function tusBirakildi(e) {
+    if (e.key === "ArrowLeft" && yon === -1) yon = 0;
+    if (e.key === "ArrowRight" && yon === 1) yon = 0;
+    if (e.key === "ArrowDown") asagiBasili = false;
+  }
+
+  function dokunmatikKur() {
+    document.querySelectorAll(".dokunmatik button").forEach((dugme) => {
+      const tus = dugme.dataset.tus;
+      const basla = (e) => {
+        e.preventDefault();
+        Ses.uyandir();
+        if (duraklat || bitti) return;
+        if (tus === "sol") { yon = -1; hareketEt(-1); dasSayaci = 190; }
+        else if (tus === "sag") { yon = 1; hareketEt(1); dasSayaci = 190; }
+        else if (tus === "asagi") { asagiBasili = true; asagiKaydir(true); yumusakSayaci = 90; }
+        else if (tus === "dondur") dondur();
+        else if (tus === "birak") anindaBirak();
+      };
+      const bitir = () => {
+        if (tus === "sol" && yon === -1) yon = 0;
+        if (tus === "sag" && yon === 1) yon = 0;
+        if (tus === "asagi") asagiBasili = false;
+      };
+      dugme.addEventListener("pointerdown", basla);
+      dugme.addEventListener("pointerup", bitir);
+      dugme.addEventListener("pointercancel", bitir);
+      dugme.addEventListener("pointerleave", bitir);
+      dugme.addEventListener("contextmenu", (e) => e.preventDefault());
+    });
+  }
+
+  /* Sekme/pencere odağı kaybolunca basılı kalan tuşlar takılı kalmasın
+     (keyup olayı gelmezse parça sonsuza kadar aşağı kayardı). */
+  function tuslariBirak() {
+    yon = 0;
+    asagiBasili = false;
+  }
+
+  function gorunurlukDegisti() {
+    tuslariBirak();
+    if (aktif && document.hidden) duraklatAcKapa(true);
+  }
+
+  /* ------------------------- dışa açılan ------------------------- */
+
+  function yeniOyun() {
+    tahta = bosTahta();
+    torba = [];
+    skor = 0; satirSayisi = 0; seviye = 1;
+    duraklat = false; bitti = false;
+    dusmeSayaci = 0; temizlenenSatirlar = null;
+    yon = 0; asagiBasili = false;
+    siradaki = yeniParca();
+    parcaVer();
+    katmanGizle();
+    document.getElementById("tetrisDuraklat").textContent = "Duraklat";
+    bilgiGuncelle();
+  }
+
+  function baslat() {
+    if (!tuval) {
+      tuval = document.getElementById("tetrisTuval");
+      ctx = tuval.getContext("2d");
+      siradakiTuval = document.getElementById("siradakiTuval");
+      sctx = siradakiTuval.getContext("2d");
+
+      document.getElementById("tetrisYeni").addEventListener("click", () => { Ses.tik(); yeniOyun(); });
+      document.getElementById("tetrisDuraklat").addEventListener("click", () => { Ses.tik(); duraklatAcKapa(); });
+      document.getElementById("tetrisKatmanDugme").addEventListener("click", () => {
+        Ses.tik();
+        if (bitti) yeniOyun();
+        else duraklatAcKapa(false);
+      });
+      dokunmatikKur();
+      document.addEventListener("visibilitychange", gorunurlukDegisti);
+      window.addEventListener("blur", tuslariBirak);
+      window.addEventListener("resize", () => { if (aktif) boyutlandir(); });
+    }
+
+    aktif = true;
+    document.addEventListener("keydown", tusBasildi);
+    document.addEventListener("keyup", tusBirakildi);
+    yeniOyun();
+    boyutlandir();
+    sonZaman = performance.now();
+    raf = requestAnimationFrame(dongu);
+  }
+
+  function durdur() {
+    aktif = false;
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+    document.removeEventListener("keydown", tusBasildi);
+    document.removeEventListener("keyup", tusBirakildi);
+    yon = 0;
+    asagiBasili = false;
+  }
+
+  function rekoruGetir() {
+    return Kayit.al("tetrisRekor", 0);
+  }
+
+  return { baslat, durdur, rekoruGetir };
+})();

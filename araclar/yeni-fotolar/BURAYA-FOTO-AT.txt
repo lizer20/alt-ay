@@ -1,0 +1,10 @@
+Eklemek istediğin yeni fotoğrafları bu klasöre at,
+sonra bir üst klasördeki "yeni-foto-ekle.ps1" dosyasına
+sağ tıklayıp "PowerShell ile çalıştır" de.
+
+Gerisini script hallediyor:
+- fotoğrafları üç boyutta hazırlar (blok / kare / büyük)
+- js\ayarlar.js içindeki fotoğraf sayısını günceller
+- orijinalleri orijinal-fotograflar klasörüne taşır
+
+Bu txt dosyası scriptin işine karışmaz, silmene gerek yok.

@@ -1,0 +1,8 @@
+Arka plan müziği için buraya "muzik.mp3" adında bir dosya koy.
+
+- Dosyanın adı tam olarak: muzik.mp3
+- Bu klasörün içinde olacak: assets/muzik/muzik.mp3
+- Dosya varsa üst şeritteki 🎵 düğmesi çalışır; yoksa düğme pasif görünür.
+
+Not: Ses efektleri (satır silme, kart çevirme, kazanma sesleri) dosyaya
+ihtiyaç duymaz, tarayıcı içinde üretilir. Onları 🔊 düğmesiyle aç/kapat.
