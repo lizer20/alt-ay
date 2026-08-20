@@ -79,7 +79,7 @@ saniyeler içinde bir link verir. (Linkin kalıcı olması için ücretsiz hesap
 baslik: "Rüveyda & Emre",              // üstteki ve menüdeki büyük yazı
 altYazi: "bizim küçük oyun salonumuz", // altındaki küçük yazı
 heroDegisimSn: 4,                      // kalpteki fotoğraf kaç saniyede bir değişsin
-fotoSayisi: 19,                        // kaç fotoğraf var
+fotoSayisi: 24,                        // kaç fotoğraf var (araç bunu otomatik günceller)
 ```
 
 ### Yeni fotoğraf ekleme
