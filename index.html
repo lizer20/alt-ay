@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rüveyda &amp; Emre — Oyun Salonu</title>
+<meta name="theme-color" content="#150d1c">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💖</text></svg>">
+<link rel="stylesheet" href="css/stil.css">
+</head>
+<body>
+
+<div class="kalpler" id="kalpler" aria-hidden="true"></div>
+
+<header class="ust-serit">
+  <button class="yuvarlak-dugme" id="geriDugmesi" title="Menüye dön" aria-label="Menüye dön">←</button>
+  <div class="marka" id="marka">Rüveyda &amp; Emre</div>
+  <div class="bosluk"></div>
+  <button class="yuvarlak-dugme" id="muzikDugmesi" title="Müzik">🎵</button>
+  <button class="yuvarlak-dugme" id="efektDugmesi" title="Ses efektleri">🔊</button>
+</header>
+
+<main>
+
+  <!-- ===================== MENÜ ===================== -->
+  <section class="sayfa acik" id="sayfa-menu">
+    <div class="kahraman">
+      <div class="kalp-cerceve" id="kalpCerceve"></div>
+      <h1 id="anaBaslik">Rüveyda &amp; Emre</h1>
+      <p id="altYazi">bizim küçük oyun salonumuz</p>
+    </div>
+
+    <div class="oyun-listesi">
+      <button class="oyun-kart" data-oyun="tetris">
+        <div class="onizleme tetris" data-foto="4"></div>
+        <h3>💗 Fotoğraf Tetris</h3>
+        <p>Klasik Tetris, ama her parça bizden bir fotoğrafla düşüyor. Satırları temizle, seviye atla.</p>
+        <span class="rozet" id="rozetTetris">—</span>
+      </button>
+
+      <button class="oyun-kart" data-oyun="hafiza">
+        <div class="onizleme hafiza" data-foto="8"></div>
+        <h3>🧠 Hafıza Kartları</h3>
+        <p>Kartları çevir, aynı anıyı bul. Kolay, orta ve zor seviyeler; en iyi süreni geçmeye çalış.</p>
+        <span class="rozet" id="rozetHafiza">—</span>
+      </button>
+
+      <button class="oyun-kart" data-oyun="yapboz">
+        <div class="onizleme yapboz" data-foto="6"></div>
+        <h3>🧩 Yapboz</h3>
+        <p>Bir fotoğraf seç, parçalarına ayrılsın. İki parçaya tıklayarak yerlerini değiştir ve tamamla.</p>
+        <span class="rozet" id="rozetYapboz">—</span>
+      </button>
+    </div>
+
+    <p class="dip-not">19 fotoğraf · ok tuşları veya dokunmatik · her şey bu klasörde 💞</p>
+  </section>
+
+  <!-- ===================== TETRIS ===================== -->
+  <section class="sayfa" id="sayfa-tetris">
+    <div class="oyun-basligi">
+      <h2>💗 Fotoğraf Tetris</h2>
+      <div class="bosluk"></div>
+      <div class="dugme-grubu">
+        <button class="dugme" id="tetrisDuraklat">Duraklat</button>
+        <button class="dugme ana" id="tetrisYeni">Yeni Oyun</button>
+      </div>
+    </div>
+
+    <div class="tetris-duzen">
+      <div class="tetris-yan">
+        <div class="bilgi-kutu"><div class="etiket">Skor</div><div class="deger" id="tetrisSkor">0</div></div>
+        <div class="bilgi-kutu"><div class="etiket">Rekor</div><div class="deger" id="tetrisRekor">0</div></div>
+        <div class="bilgi-kutu"><div class="etiket">Seviye</div><div class="deger" id="tetrisSeviye">1</div></div>
+        <div class="bilgi-kutu"><div class="etiket">Satır</div><div class="deger" id="tetrisSatir">0</div></div>
+        <canvas id="siradakiTuval" width="176" height="92"></canvas>
+        <div class="tuslar">
+          <b>←</b> <b>→</b> hareket<br>
+          <b>↑</b> döndür<br>
+          <b>↓</b> hızlı indir<br>
+          <b>Boşluk</b> anında bırak<br>
+          <b>P</b> duraklat
+        </div>
+      </div>
+
+      <div class="sahne">
+        <div class="tetris-tahta">
+          <canvas id="tetrisTuval" width="330" height="660"></canvas>
+        </div>
+        <div class="katman" id="tetrisKatman">
+          <div>
+            <h3 id="tetrisKatmanBaslik">Duraklatıldı</h3>
+            <p id="tetrisKatmanMetin">Devam etmek için tuşa bas</p>
+            <div class="buyuk-skor" id="tetrisKatmanSkor" style="display:none">0</div>
+            <button class="dugme ana" id="tetrisKatmanDugme">Devam Et</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dokunmatik">
+      <button data-tus="sol" aria-label="Sol">◀</button>
+      <button data-tus="dondur" aria-label="Döndür">⟳</button>
+      <button data-tus="sag" aria-label="Sağ">▶</button>
+      <button data-tus="asagi" aria-label="Aşağı">▼</button>
+      <button data-tus="birak" aria-label="Bırak">⤓</button>
+    </div>
+  </section>
+
+  <!-- ===================== HAFIZA ===================== -->
+  <section class="sayfa" id="sayfa-hafiza">
+    <div class="oyun-basligi">
+      <h2>🧠 Hafıza Kartları</h2>
+      <div class="bosluk"></div>
+      <div class="dugme-grubu" id="hafizaZorluk">
+        <button class="dugme" data-cift="6">Kolay</button>
+        <button class="dugme" data-cift="8">Orta</button>
+        <button class="dugme" data-cift="12">Zor</button>
+      </div>
+      <button class="dugme ana" id="hafizaYeni">Yeni Oyun</button>
+    </div>
+
+    <div class="bilgi-serit">
+      <div class="bilgi-kutu"><div class="etiket">Süre</div><div class="deger" id="hafizaSure">00:00</div></div>
+      <div class="bilgi-kutu"><div class="etiket">Hamle</div><div class="deger" id="hafizaHamle">0</div></div>
+      <div class="bilgi-kutu"><div class="etiket">Bulunan</div><div class="deger" id="hafizaBulunan">0</div></div>
+      <div class="bilgi-kutu"><div class="etiket">Rekor</div><div class="deger" id="hafizaRekor">—</div></div>
+    </div>
+
+    <div class="sahne">
+      <div class="hafiza-tahta" id="hafizaTahta"></div>
+      <div class="katman" id="hafizaKatman">
+        <div>
+          <h3>Hepsini buldun! 💞</h3>
+          <p id="hafizaKatmanMetin"></p>
+          <button class="dugme ana" id="hafizaKatmanDugme">Tekrar Oyna</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== YAPBOZ ===================== -->
+  <section class="sayfa" id="sayfa-yapboz">
+    <div class="oyun-basligi">
+      <h2>🧩 Yapboz</h2>
+      <div class="bosluk"></div>
+      <div class="dugme-grubu" id="yapbozZorluk">
+        <button class="dugme" data-n="3">3 × 3</button>
+        <button class="dugme" data-n="4">4 × 4</button>
+        <button class="dugme" data-n="5">5 × 5</button>
+      </div>
+      <button class="dugme ana" id="yapbozKaristir">Karıştır</button>
+    </div>
+
+    <div class="foto-seridi" id="fotoSeridi"></div>
+
+    <div class="bilgi-serit">
+      <div class="bilgi-kutu"><div class="etiket">Süre</div><div class="deger" id="yapbozSure">00:00</div></div>
+      <div class="bilgi-kutu"><div class="etiket">Hamle</div><div class="deger" id="yapbozHamle">0</div></div>
+      <div class="bilgi-kutu"><div class="etiket">Doğru yerde</div><div class="deger" id="yapbozDogru">0</div></div>
+    </div>
+
+    <div class="sahne yapboz-sahne">
+      <div class="yapboz-tahta" id="yapbozTahta"></div>
+      <div class="yapboz-onizleme">
+        <div class="etiket">Nasıl olacak</div>
+        <img id="yapbozOnizleme" src="assets/kare/foto-01.jpg" alt="Yapbozun tamamlanmış hâli">
+      </div>
+      <div class="katman" id="yapbozKatman">
+        <div>
+          <h3>Tamamlandı! 🧩💖</h3>
+          <p id="yapbozKatmanMetin"></p>
+          <button class="dugme ana" id="yapbozKatmanDugme">Yeni Yapboz</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<audio id="arkaMuzik" loop preload="auto" src="assets/muzik/muzik.mp3"></audio>
+
+<script src="js/ayarlar.js"></script>
+<script src="js/ses.js"></script>
+<script src="js/oyunlar/tetris.js"></script>
+<script src="js/oyunlar/hafiza.js"></script>
+<script src="js/oyunlar/yapboz.js"></script>
+<script src="js/uygulama.js"></script>
+</body>
+</html>
