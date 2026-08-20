@@ -19,6 +19,26 @@
 
 * { box-sizing: border-box; }
 
+/* Dokunmatikte (özellikle iOS) uzun basınca çıkan metin seçme / kopyala
+   balonu, tuşun bırakılma olayını yutup tuşu basılı kalmış gibi
+   gösteriyordu. Tıklanan her şeyde bu davranışı kapatıyoruz. */
+.yuvarlak-dugme,
+.dugme,
+.oyun-kart,
+.kart,
+.parca,
+.foto-seridi img,
+.dokunmatik button {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Basılı tutulan yön tuşlarında hiçbir kaydırma/zoom hareketi araya girmesin */
+.dokunmatik button { touch-action: none; }
+
 html, body {
   margin: 0;
   padding: 0;
@@ -34,7 +54,9 @@ body {
     linear-gradient(180deg, var(--zemin-2), var(--zemin) 60%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  /* Not: burada overflow-x: hidden YOK — body'ye overflow vermek
+     dokunmatik tuş şeridindeki position:sticky'yi bozuyor.
+     Yatay taşmayı .kalpler kendi içinde zaten kırpıyor. */
 }
 
 /* Arka planda süzülen kalpler */
@@ -115,7 +137,10 @@ body.oyunda #geriDugmesi { display: grid; }
 main { position: relative; z-index: 1; }
 
 .sayfa { display: none; padding: 22px 18px 60px; max-width: 1080px; margin: 0 auto; }
-.sayfa.acik { display: block; animation: girisAnimasyonu 0.35s ease both; }
+/* fill-mode "backwards": animasyon bitince geriye transform kalmasın.
+   "both" bırakılırsa sayfada birim transform kalıyor ve dokunmatik tuş
+   şeridindeki position:sticky çalışmıyor. */
+.sayfa.acik { display: block; animation: girisAnimasyonu 0.35s ease backwards; }
 
 @keyframes girisAnimasyonu {
   from { opacity: 0; transform: translateY(14px); }
@@ -368,30 +393,53 @@ main { position: relative; z-index: 1; }
   font-weight: 600;
 }
 
-/* dokunmatik yön tuşları */
+/* dokunmatik yön tuşları
+   Yerleşim:  [◀ ▶]        [▼]        [⤓ ⟳]
+   Sol başparmak hareket, sağ başparmak döndür/bırak. */
 .dokunmatik {
   display: none;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  margin-top: 14px;
-  justify-content: center;
-  flex-wrap: wrap;
+  margin: 16px auto 0;
+  max-width: 460px;
+}
+.tus-grubu {
+  display: flex;
+  gap: 10px;
+  flex: none;
 }
 .dokunmatik button {
-  width: 60px;
-  height: 56px;
-  font-size: 20px;
-  border-radius: 14px;
+  width: clamp(50px, 16vw, 66px);
+  height: 58px;
+  font-size: 21px;
+  border-radius: 15px;
   border: 1px solid var(--kart-kenar);
   background: var(--kart);
   color: var(--metin);
   cursor: pointer;
-  touch-action: manipulation;
-  user-select: none;
+  transition: background 0.12s, transform 0.1s;
 }
-.dokunmatik button:active { background: rgba(255, 107, 157, 0.28); }
+.dokunmatik button:active {
+  background: rgba(255, 107, 157, 0.32);
+  transform: scale(0.94);
+}
 
 @media (pointer: coarse) {
-  .dokunmatik { display: flex; }
+  .dokunmatik {
+    display: flex;
+    /* Ekran çok kısaysa (tahta sığmayıp sayfa kayarsa) tuşlar
+       ekranın altına yapışsın, hep parmağın altında kalsın. */
+    position: sticky;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    z-index: 20;
+  }
+  /* Tahtanın üstüne denk gelebileceği için tuşlar biraz daha dolu görünsün */
+  .dokunmatik button {
+    background: rgba(46, 30, 58, 0.92);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  }
 }
 
 /* ------------------------- HAFIZA ------------------------- */
@@ -536,16 +584,26 @@ main { position: relative; z-index: 1; }
 
 @media (max-width: 760px) {
   .sayfa { padding: 16px 12px 48px; }
-  .tetris-duzen { flex-direction: column; align-items: center; }
+  .tetris-duzen { flex-direction: column; align-items: center; gap: 10px; }
   .tetris-yan {
     width: min(100%, 420px);
     flex-direction: row;
     flex-wrap: wrap;
+    gap: 8px;
     order: -1;
   }
-  .tetris-yan .bilgi-kutu { flex: 1 1 84px; }
-  #siradakiTuval { width: 108px; height: 62px; flex: none; }
+  .tetris-yan .bilgi-kutu { flex: 1 1 70px; }
+  #siradakiTuval { width: 84px; height: 50px; flex: none; }
   .tuslar { display: none; }
+
+  /* Tetris ekranı tek ekrana sığsın diye üst kısmı sıkıştır */
+  #sayfa-tetris { padding-top: 10px; padding-bottom: 16px; }
+  #sayfa-tetris .oyun-basligi { margin-bottom: 10px; gap: 8px; }
+  #sayfa-tetris .oyun-basligi h2 { font-size: 18px; }
+  #sayfa-tetris .dugme { padding: 7px 13px; font-size: 13px; }
+  #sayfa-tetris .bilgi-kutu { padding: 5px 10px; }
+  #sayfa-tetris .bilgi-kutu .etiket { font-size: 10px; }
+  #sayfa-tetris .bilgi-kutu .deger { font-size: 16px; }
   .yapboz-onizleme { width: 100%; max-width: 460px; display: flex; align-items: center; gap: 12px; }
   .yapboz-onizleme img { width: 92px; }
 }

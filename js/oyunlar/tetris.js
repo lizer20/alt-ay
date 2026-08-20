@@ -34,6 +34,7 @@ const Tetris = (() => {
   let temizlenenSatirlar = null, temizlemeSayaci = 0;
   let yon = 0, dasSayaci = 0, asagiBasili = false, yumusakSayaci = 0;
   let sonFoto = -1;
+  const basiliDokunmalar = new Map(); // pointerId -> basılı tutulan tuş
 
   /* ------------------------- çizim yardımcıları ------------------------- */
 
@@ -277,8 +278,16 @@ const Tetris = (() => {
   function boyutlandir() {
     if (!tuval) return;
     const darEkran = window.innerWidth <= 760;
-    const dikeyPay = darEkran ? 330 : 180;
     const yatayPay = darEkran ? 34 : 250;
+
+    /* Dikeyde ne kadar yer kaldığını tahmin etmek yerine ölçüyoruz:
+       tahtanın üstünde kalan her şey + altındaki dokunmatik tuş şeridi.
+       Böylece tuşlar her telefonda ekranın içinde kalıyor. */
+    const tahtaUst = tuval.parentElement.getBoundingClientRect().top + window.scrollY;
+    const serit = document.querySelector(".dokunmatik");
+    const seritYuksekligi = serit && serit.offsetHeight ? serit.offsetHeight + 30 : 24;
+    const dikeyPay = tahtaUst > 0 ? tahtaUst + seritYuksekligi + 10 : (darEkran ? 330 : 180);
+
     const hY = Math.floor((window.innerHeight - dikeyPay) / SATIR);
     const hX = Math.floor(Math.min(window.innerWidth - yatayPay, 420) / SUTUN);
     // Ekran çok kısaysa tahtayı küçültmek yerine sayfanın kaymasına izin ver
@@ -441,34 +450,73 @@ const Tetris = (() => {
   function dokunmatikKur() {
     document.querySelectorAll(".dokunmatik button").forEach((dugme) => {
       const tus = dugme.dataset.tus;
+      const basiliTutulur = tus === "sol" || tus === "sag" || tus === "asagi";
+
       const basla = (e) => {
         e.preventDefault();
         Ses.uyandir();
         if (duraklat || bitti) return;
+
+        // Parmak tuşun dışına kaysa bile bırakma olayı bu tuşa gelsin
+        if (basiliTutulur && dugme.setPointerCapture) {
+          try { dugme.setPointerCapture(e.pointerId); } catch { /* önemsiz */ }
+        }
+        if (basiliTutulur) basiliDokunmalar.set(e.pointerId, tus);
+
         if (tus === "sol") { yon = -1; hareketEt(-1); dasSayaci = 190; }
         else if (tus === "sag") { yon = 1; hareketEt(1); dasSayaci = 190; }
         else if (tus === "asagi") { asagiBasili = true; asagiKaydir(true); yumusakSayaci = 90; }
         else if (tus === "dondur") dondur();
         else if (tus === "birak") anindaBirak();
       };
-      const bitir = () => {
-        if (tus === "sol" && yon === -1) yon = 0;
-        if (tus === "sag" && yon === 1) yon = 0;
-        if (tus === "asagi") asagiBasili = false;
-      };
+
+      const bitir = (e) => dokunmaBitir(e.pointerId);
+
       dugme.addEventListener("pointerdown", basla);
       dugme.addEventListener("pointerup", bitir);
       dugme.addEventListener("pointercancel", bitir);
       dugme.addEventListener("pointerleave", bitir);
+      // iOS uzun basma balonu araya girip yakalamayı iptal ederse
+      dugme.addEventListener("lostpointercapture", bitir);
+      // iOS'ta uzun basmanın metin seçme davranışını tamamen kapat
+      dugme.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
       dugme.addEventListener("contextmenu", (e) => e.preventDefault());
     });
+
+    /* Emniyet ağı: yukarıdakilerin hiçbiri gelmezse bile parmak
+       kalktığı anda tuşu bırak. */
+    document.addEventListener("pointerup", genelDokunmaBitir);
+    document.addEventListener("pointercancel", genelDokunmaBitir);
+    document.addEventListener("touchend", dokunmaSonuKontrol);
+    document.addEventListener("touchcancel", dokunmaSonuKontrol);
+  }
+
+  function genelDokunmaBitir(e) {
+    dokunmaBitir(e.pointerId);
+  }
+
+  /* Ekranda hiç parmak kalmadıysa basılı ne varsa bırak */
+  function dokunmaSonuKontrol(e) {
+    if (e.touches && e.touches.length === 0) tuslariBirak();
   }
 
   /* Sekme/pencere odağı kaybolunca basılı kalan tuşlar takılı kalmasın
      (keyup olayı gelmezse parça sonsuza kadar aşağı kayardı). */
   function tuslariBirak() {
+    basiliDokunmalar.clear();
     yon = 0;
     asagiBasili = false;
+  }
+
+  /* Dokunmatikte her parmak ayrı takip edilir: iki başparmakla oynarken
+     birinin bırakılması diğerini iptal etmesin. */
+  function dokunmaBitir(pointerId) {
+    const tus = basiliDokunmalar.get(pointerId);
+    if (tus === undefined) return;
+    basiliDokunmalar.delete(pointerId);
+    if (tus === "sol" && yon === -1) yon = 0;
+    if (tus === "sag" && yon === 1) yon = 0;
+    if (tus === "asagi") asagiBasili = false;
   }
 
   function gorunurlukDegisti() {

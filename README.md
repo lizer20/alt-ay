@@ -26,7 +26,17 @@ Kurulum yok, derleme yok, internet gerekmez — `index.html` dosyasına çift t�
 | P | duraklat |
 | Esc | menüye dön |
 
-Telefon ve tablette ekranın altında dokunmatik tuşlar çıkar.
+**Tetris (telefon / tablet)**
+
+Ekranın altında dokunmatik tuşlar çıkar:
+
+```
+ ◀  ▶              ▼              ⤓  ⟳
+ sol başparmak   yumuşak inme   sağ başparmak
+```
+
+Sol tarafta hareket, tam ortada aşağı, sağda anında bırak ve döndürme.
+Ekran kısaysa tuş şeridi ekranın altına yapışır, hep parmağının altında kalır.
 Diğer iki oyun zaten tamamen tıklamayla oynanıyor.
 
 ---
