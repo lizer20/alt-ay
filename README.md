@@ -117,11 +117,25 @@ Elle eklemek istersen: aynı isimli dosyayı `assets/tiles` (160×160),
 `css/stil.css` dosyasının en başındaki `:root` bloğunda tüm renkler tanımlı:
 
 ```css
---pembe: #ff6b9d;
---gul:   #ff9ebb;
---altin: #ffd479;
---mor:   #a06bff;
+--zemin:      #fdf6f0;   /* krem kağıt zemin */
+--kart:       #ffffff;   /* kartlar */
+--pembe:      #d13f6b;   /* ana vurgu (üstünde beyaz yazı okunur) */
+--pembe-koyu: #b8355c;   /* açık zemin üstüne pembe YAZI için */
+--altin:      #b07d24;   /* sıcak amber */
+--mor:        #7f5cbd;
+--metin:      #4a2f3c;   /* yazı rengi */
+--soluk:      #836374;   /* ikincil yazı */
+--oyun-zemin: #f5e7e1;   /* tetris/yapboz tahtası */
 ```
+
+> Pembeyi daha açık bir tona çekersen (ör. `#ff8fab`) üzerindeki beyaz yazılar
+> okunmaz hale gelir. Renk değiştirirken düğme yazılarına bir bak.
+
+Arka planda süzülen polaroidlerin sayısını, boyutunu ve hızını
+`js/uygulama.js` içindeki `polaroidleriSerp` fonksiyonundan ayarlayabilirsin.
+
+> **Değişiklik görünmüyorsa:** tarayıcı eski dosyayı önbellekten açıyordur.
+> Sayfayı **Ctrl + F5** ile yenile.
 
 ---
 

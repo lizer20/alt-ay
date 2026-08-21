@@ -73,18 +73,39 @@ function onizlemeleriDoldur() {
   });
 }
 
-function kalpYagdir() {
-  const kap = document.getElementById("kalpler");
-  const simgeler = ["💗", "💖", "💘", "🤍", "💞"];
-  for (let i = 0; i < 14; i++) {
-    const s = document.createElement("span");
-    s.textContent = simgeler[rastgele(simgeler.length)];
-    s.style.left = rastgele(100) + "%";
-    s.style.fontSize = 12 + rastgele(20) + "px";
-    s.style.animationDuration = 16 + rastgele(18) + "s";
-    s.style.animationDelay = -rastgele(30) + "s";
-    kap.appendChild(s);
-  }
+/* Arka planda usulca yükselen polaroid fotoğraflar.
+   Küçük "tile" görselleri kullanılıyor (zaten yüklü), ek yük getirmiyor. */
+function polaroidleriSerp() {
+  const kap = document.getElementById("arkaPlan");
+  const darEkran = window.innerWidth < 700;
+  const adet = Math.min(darEkran ? 6 : 10, FOTOLAR.length);
+  const secilen = karistir(FOTOLAR.map((_, i) => i)).slice(0, adet);
+
+  secilen.forEach((fotoIdx, i) => {
+    const en = (darEkran ? 42 : 52) + rastgele(darEkran ? 30 : 46);
+    const cerceve = Math.round(en * 0.07) + 2;
+
+    const p = document.createElement("div");
+    p.className = "polaroid";
+    p.style.width = en + "px";
+    // polaroid oranı: alt kenar kalın (fotoğrafın altındaki boş şerit)
+    p.style.padding = `${cerceve}px ${cerceve}px ${Math.round(cerceve * 3.2)}px`;
+    // ekrana eşit dağılsınlar, sonra biraz rastgelelik
+    p.style.left = Math.round((i / adet) * 100 + rastgele(8)) + "%";
+    // hep gözle görülür bir eğim olsun (düz duran polaroid sırıtıyor)
+    const yon = rastgele(2) ? 1 : -1;
+    p.style.setProperty("--egim", yon * (3 + rastgele(9)) + "deg");
+    p.style.setProperty("--kayma", (rastgele(60) - 30) + "px");
+    p.style.setProperty("--parlaklik", (0.36 + rastgele(18) / 100).toFixed(2));
+    p.style.animationDuration = 34 + rastgele(26) + "s";
+    p.style.animationDelay = -rastgele(50) + "s";
+
+    const img = document.createElement("img");
+    img.src = FOTOLAR[fotoIdx].tile;
+    img.alt = "";
+    p.appendChild(img);
+    kap.appendChild(p);
+  });
 }
 
 function rozetleriGuncelle() {
@@ -108,7 +129,7 @@ function kurulum() {
   document.querySelector(".dip-not").textContent =
     `${FOTOLAR.length} fotoğraf · ok tuşları veya dokunmatik · her şey bu klasörde 💞`;
 
-  kalpYagdir();
+  polaroidleriSerp();
   onizlemeleriDoldur();
   kalbiCalistir();
   rozetleriGuncelle();

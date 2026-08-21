@@ -36,6 +36,17 @@ const Tetris = (() => {
   let sonFoto = -1;
   const basiliDokunmalar = new Map(); // pointerId -> basılı tutulan tuş
 
+  /* Tuvalde kullanılan renkler de CSS'teki paletten okunuyor, böylece
+     temayı değiştirmek için tek dosyaya (stil.css) dokunmak yetiyor. */
+  let izgaraRengi = "rgba(120, 76, 92, 0.10)";
+  let parlamaRengi = "224, 87, 127";
+
+  function renkleriOku() {
+    const kok = getComputedStyle(document.documentElement);
+    const izgara = kok.getPropertyValue("--izgara").trim();
+    if (izgara) izgaraRengi = izgara;
+  }
+
   /* ------------------------- çizim yardımcıları ------------------------- */
 
   function yuvarlakYol(c, x, y, g, y2, r) {
@@ -76,11 +87,12 @@ const Tetris = (() => {
     c.fillRect(bx, by, bb, bb);
     c.restore();
 
+    // Beyaz kenarlık: her blok küçük bir fotoğraf baskısı gibi dursun
     c.save();
-    c.globalAlpha = alfa * 0.7;
+    c.globalAlpha = alfa * 0.9;
     yuvarlakYol(c, bx, by, bb, bb, r);
-    c.strokeStyle = "rgba(255,255,255,0.28)";
-    c.lineWidth = Math.max(1, boyut * 0.03);
+    c.strokeStyle = "rgba(255,255,255,0.8)";
+    c.lineWidth = Math.max(1.2, boyut * 0.045);
     c.stroke();
     c.restore();
   }
@@ -309,12 +321,11 @@ const Tetris = (() => {
     if (!ctx) return;
     const g = hucre * SUTUN, y = hucre * SATIR;
 
+    // Tahtanın zemin rengi CSS'ten geliyor (.tetris-tahta), burada sadece siliyoruz
     ctx.clearRect(0, 0, g, y);
-    ctx.fillStyle = "rgba(0,0,0,0.30)";
-    ctx.fillRect(0, 0, g, y);
 
     // ızgara
-    ctx.strokeStyle = "rgba(255,255,255,0.045)";
+    ctx.strokeStyle = izgaraRengi;
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (let s = 1; s < SUTUN; s++) { ctx.moveTo(s * hucre + 0.5, 0); ctx.lineTo(s * hucre + 0.5, y); }
@@ -332,8 +343,8 @@ const Tetris = (() => {
     // silinen satırların parlaması
     if (temizlenenSatirlar) {
       const oran = temizlemeSayaci / TEMIZLEME_SURESI;
-      const parlaklik = Math.abs(Math.sin(oran * Math.PI * 3)) * 0.8;
-      ctx.fillStyle = `rgba(255,255,255,${parlaklik})`;
+      const parlaklik = Math.abs(Math.sin(oran * Math.PI * 3)) * 0.85;
+      ctx.fillStyle = `rgba(${parlamaRengi},${parlaklik})`;
       for (const r of temizlenenSatirlar) ctx.fillRect(0, r * hucre, g, hucre);
     }
 
@@ -347,7 +358,7 @@ const Tetris = (() => {
             if (!parca.sekil[r][s]) continue;
             const yy = hy + r;
             if (yy < 0) continue;
-            hucreCiz(ctx, (parca.x + s) * hucre, yy * hucre, hucre, parca.foto, 0.2);
+            hucreCiz(ctx, (parca.x + s) * hucre, yy * hucre, hucre, parca.foto, 0.3);
           }
         }
       }
@@ -561,6 +572,7 @@ const Tetris = (() => {
     }
 
     aktif = true;
+    renkleriOku();
     document.addEventListener("keydown", tusBasildi);
     document.addEventListener("keyup", tusBirakildi);
     yeniOyun();
