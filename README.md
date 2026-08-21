@@ -12,6 +12,7 @@ Kurulum yok, derleme yok, internet gerekmez — `index.html` dosyasına çift t�
 | 💗 **Fotoğraf Tetris** | Klasik Tetris. Düşen her parça rastgele bir fotoğrafınızla gelir. Satır silme, seviye atlama, hayalet parça (nereye düşeceğini gösterir), rekor kaydı. |
 | 🧠 **Hafıza Kartları** | Kartları çevir, aynı fotoğrafı bul. Kolay (6 çift) / Orta (8) / Zor (12). Süre ve hamle sayısı tutulur. |
 | 🧩 **Yapboz** | Bir fotoğraf seç, parçalara ayrılsın. İki parçaya tıklayarak yerlerini değiştir. 3×3 / 4×4 / 5×5. |
+| 🧱 **Blok Patlat** | 8×8 tahta. Alttaki üç parçayı sürükleyip tahtaya bırak; dolan satır ve sütunlar patlar. Arka arkaya patlatınca kombo çarpanı büyür. Üç parçanın da sığacak yeri kalmayınca oyun biter. |
 
 ### Kontroller
 
@@ -37,7 +38,11 @@ Ekranın altında dokunmatik tuşlar çıkar:
 
 Sol tarafta hareket, tam ortada aşağı, sağda anında bırak ve döndürme.
 Ekran kısaysa tuş şeridi ekranın altına yapışır, hep parmağının altında kalır.
-Diğer iki oyun zaten tamamen tıklamayla oynanıyor.
+
+**Blok Patlat**, alttaki parçayı tutup tahtaya sürüklemekle oynanıyor —
+fare ve dokunmatik ikisi de çalışıyor. Parça sığacaksa nereye oturacağı
+soluk olarak gösterilir; o hamle bir satırı veya sütunu tamamlayacaksa
+o çizgi pembeye boyanır. Hafıza ve yapboz tamamen tıklamayla oynanıyor.
 
 ---
 
@@ -134,6 +139,18 @@ Elle eklemek istersen: aynı isimli dosyayı `assets/tiles` (160×160),
 Arka planda süzülen polaroidlerin sayısını, boyutunu ve hızını
 `js/uygulama.js` içindeki `polaroidleriSerp` fonksiyonundan ayarlayabilirsin.
 
+### Efektler
+
+Tetris'te satır silinince ve Blok Patlat'ta satır/sütun patlayınca, o hücreler
+küçük fotoğraf kırıklarına ayrılıp etrafa saçılıyor; kazanılan puan, kombo ve
+"SÜPER! / HARİKA! / İNANILMAZ!" yazıları havaya süzülüyor ve tahta sarsılıyor.
+
+Hepsi `js/efektler.js` içinde. Çok abartılı gelirse oradaki değerlerle oynayabilirsin:
+
+- `EN_FAZLA_PARCACIK` — aynı anda ekranda olabilecek kırık sayısı (düşürürsen daha sakin olur)
+- `patlat()` içindeki `hiz` — kırıkların ne kadar hızlı savrulacağı
+- `sars()` çağrılarındaki ilk sayı — sarsıntı şiddeti (0 verirsen sarsıntı kapanır)
+
 > **Değişiklik görünmüyorsa:** tarayıcı eski dosyayı önbellekten açıyordur.
 > Sayfayı **Ctrl + F5** ile yenile.
 
@@ -146,12 +163,15 @@ index.html                 → ana sayfa
 css/stil.css               → tüm görünüm ve renkler
 js/
   ayarlar.js               → başlık, fotoğraf listesi, küçük yardımcılar
+  blokcizim.js             → fotoğraflı blokların çizimi (Tetris + Blok Patlat ortak)
+  efektler.js              → patlama parçacıkları, uçuşan yazılar, ekran sarsıntısı
   ses.js                   → ses efektleri ve müzik
   uygulama.js              → menü ve sayfa geçişleri
   oyunlar/
     tetris.js
     hafiza.js
     yapboz.js
+    blokpatlat.js
 assets/
   tiles/  → 160×160  (Tetris blokları)
   kare/   → 560×560  (hafıza kartları, yapboz)

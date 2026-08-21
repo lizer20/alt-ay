@@ -51,6 +51,13 @@
         <p>Bir fotoğraf seç, parçalarına ayrılsın. İki parçaya tıklayarak yerlerini değiştir ve tamamla.</p>
         <span class="rozet" id="rozetYapboz">—</span>
       </button>
+
+      <button class="oyun-kart" data-oyun="blokpatlat">
+        <div class="onizleme blok" data-foto="6"></div>
+        <h3>🧱 Blok Patlat</h3>
+        <p>Üç parçayı 8×8 tahtaya sürükle. Dolan satır ve sütunlar patlar — arka arkaya patlatınca kombo katlanır.</p>
+        <span class="rozet" id="rozetBlok">—</span>
+      </button>
     </div>
 
     <p class="dip-not">19 fotoğraf · ok tuşları veya dokunmatik · her şey bu klasörde 💞</p>
@@ -182,15 +189,49 @@
     </div>
   </section>
 
+  <!-- ===================== BLOK PATLAT ===================== -->
+  <section class="sayfa" id="sayfa-blokpatlat">
+    <div class="oyun-basligi">
+      <h2>🧱 Blok Patlat</h2>
+      <div class="bosluk"></div>
+      <button class="dugme ana" id="blokYeni">Yeni Oyun</button>
+    </div>
+
+    <div class="bilgi-serit">
+      <div class="bilgi-kutu"><div class="etiket">Skor</div><div class="deger" id="blokSkor">0</div></div>
+      <div class="bilgi-kutu"><div class="etiket">Rekor</div><div class="deger" id="blokRekor">0</div></div>
+      <div class="bilgi-kutu"><div class="etiket">Kombo</div><div class="deger" id="blokKombo">—</div></div>
+    </div>
+
+    <div class="sahne blok-sahne">
+      <div class="blok-tahta">
+        <canvas id="blokTuval" width="360" height="480"></canvas>
+      </div>
+      <div class="katman" id="blokKatman">
+        <div>
+          <h3>Yer kalmadı! 🧱</h3>
+          <div class="buyuk-skor" id="blokKatmanSkor">0</div>
+          <p id="blokKatmanMetin"></p>
+          <button class="dugme ana" id="blokKatmanDugme">Yeni Oyun</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="ipucu">Alttaki parçayı tut, tahtaya sürükle ve bırak. Dolan satır ve sütunlar patlar.</p>
+  </section>
+
 </main>
 
 <audio id="arkaMuzik" loop preload="auto" src="assets/muzik/muzik.mp3"></audio>
 
 <script src="js/ayarlar.js"></script>
+<script src="js/blokcizim.js"></script>
+<script src="js/efektler.js"></script>
 <script src="js/ses.js"></script>
 <script src="js/oyunlar/tetris.js"></script>
 <script src="js/oyunlar/hafiza.js"></script>
 <script src="js/oyunlar/yapboz.js"></script>
+<script src="js/oyunlar/blokpatlat.js"></script>
 <script src="js/uygulama.js"></script>
 </body>
 </html>
