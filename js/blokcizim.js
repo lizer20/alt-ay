@@ -16,19 +16,76 @@ function yuvarlakYol(c, x, y, en, boy, r) {
   c.closePath();
 }
 
-/* Tek bir fotoğraflı blok çiz */
+/* ---------------------------------------------------------
+   Blok görselleri önbelleği
+
+   Her blok her karede sıfırdan çizilirse (kırpma + gradyan + kenarlık)
+   telefonda 60 kare/sn tutturmak mümkün olmuyor — tahtada 60+ blok var.
+   Bunun yerine her (fotoğraf, boyut) ikilisi için bir kez küçük bir
+   tuvale çizip sonra sadece kopyalıyoruz.
+   --------------------------------------------------------- */
+
+const _blokOnbellek = new Map();
+let _onbellekDpr = 0;
+
+function blokOnbellegiTemizle() {
+  _blokOnbellek.clear();
+}
+
+function _ekranOrani() {
+  return Math.min(window.devicePixelRatio || 1, 2);
+}
+
+function blokSprite(fotoIdx, boyut) {
+  const b = Math.max(4, Math.round(boyut));
+  const dpr = _ekranOrani();
+  if (dpr !== _onbellekDpr) {
+    _blokOnbellek.clear();
+    _onbellekDpr = dpr;
+  }
+
+  const anahtar = fotoIdx + "|" + b;
+  const hazirSprite = _blokOnbellek.get(anahtar);
+  if (hazirSprite) return hazirSprite;
+
+  const k = document.createElement("canvas");
+  k.width = k.height = Math.round(b * dpr);
+  const c = k.getContext("2d");
+  c.scale(dpr, dpr);
+  const fotoHazir = _blokIcCiz(c, 0, 0, b, fotoIdx);
+
+  // fotoğraf henüz yüklenmediyse önbelleğe alma, sonraki karede tekrar dene
+  if (fotoHazir) _blokOnbellek.set(anahtar, k);
+  return k;
+}
+
+/* Tek bir fotoğraflı blok çiz (önbellekten kopyalanır) */
 function blokCiz(c, x, y, boyut, fotoIdx, alfa = 1) {
+  const sprite = blokSprite(fotoIdx, boyut);
+  if (alfa !== 1) {
+    c.save();
+    c.globalAlpha = alfa;
+    c.drawImage(sprite, x, y, boyut, boyut);
+    c.restore();
+  } else {
+    c.drawImage(sprite, x, y, boyut, boyut);
+  }
+}
+
+/* Bloğun asıl çizimi — sadece önbellek doldurulurken çalışır */
+function _blokIcCiz(c, x, y, boyut, fotoIdx) {
   const bosluk = Math.max(1, boyut * 0.055);
   const bx = x + bosluk / 2, by = y + bosluk / 2, bb = boyut - bosluk;
   const r = Math.max(3, boyut * 0.17);
   const img = TILE_IMG[fotoIdx % TILE_IMG.length];
 
+  const fotoHazir = !!(img && img.complete && img.naturalWidth);
+
   c.save();
-  c.globalAlpha = alfa;
   yuvarlakYol(c, bx, by, bb, bb, r);
   c.clip();
 
-  if (img && img.complete && img.naturalWidth) {
+  if (fotoHazir) {
     c.drawImage(img, bx, by, bb, bb);
   } else {
     c.fillStyle = "#d13f6b";
@@ -46,12 +103,14 @@ function blokCiz(c, x, y, boyut, fotoIdx, alfa = 1) {
 
   // Beyaz kenarlık: her blok küçük bir fotoğraf baskısı gibi dursun
   c.save();
-  c.globalAlpha = alfa * 0.9;
+  c.globalAlpha = 0.9;
   yuvarlakYol(c, bx, by, bb, bb, r);
   c.strokeStyle = "rgba(255,255,255,0.8)";
   c.lineWidth = Math.max(1.2, boyut * 0.045);
   c.stroke();
   c.restore();
+
+  return fotoHazir;
 }
 
 /* Boş hücre (oyun tahtasındaki çukur kare) */

@@ -304,6 +304,7 @@ const Tetris = (() => {
     tuval.width = Math.round(g * dpr);
     tuval.height = Math.round(y * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    blokOnbellegiTemizle();   // hücre boyutu değişti, hazır blok görselleri geçersiz
     ciz();
   }
 

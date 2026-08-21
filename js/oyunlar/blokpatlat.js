@@ -56,6 +56,14 @@ const BlokPatlat = (() => {
   let tepsiGiris = 0;
   let izgaraRengi = "rgba(120, 76, 92, 0.10)";
 
+  /* Hız için iki önbellek:
+     - boş ızgara her karede 64 kez çizilmesin diye hazır resim olarak tutulur
+     - "bu parça bir yere sığıyor mu" sorusu tahtanın tamamını tarıyor,
+       her karede değil sadece tahta/tepsi değişince hesaplanır */
+  let izgaraTuval = null;
+  let tepsiSigar = [false, false, false];
+  let ekstraKare = 0;   // hareket bittikten sonra birkaç kare daha çiz
+
   /* ------------------------- tahta işlemleri ------------------------- */
 
   function bosTahta() {
@@ -92,6 +100,11 @@ const BlokPatlat = (() => {
   function tepsiyiDoldur() {
     tepsi = Array.from({ length: TEPSI_ADET }, yeniParca);
     tepsiGiris = TEPSI_GIRIS_SURESI;
+    tepsiSigmaGuncelle();
+  }
+
+  function tepsiSigmaGuncelle() {
+    tepsiSigar = tepsi.map((p) => (p ? biryereSigarMi(p.sekil) : false));
   }
 
   /* ------------------------- yerleştirme ------------------------- */
@@ -115,6 +128,7 @@ const BlokPatlat = (() => {
 
     dolulariPatlat();
     if (tepsi.every((p) => p === null)) tepsiyiDoldur();
+    else tepsiSigmaGuncelle();     // tahta değişti, sığma durumu da değişmiş olabilir
     bilgiGuncelle();
     return true;
   }
@@ -188,6 +202,7 @@ const BlokPatlat = (() => {
   function patlamayiBitir() {
     for (const [r, s] of patlama.hucreler) tahta[r][s] = null;
     patlama = null;
+    tepsiSigmaGuncelle();          // yer açıldı, sığmayan parçalar sığabilir
     bilgiGuncelle();
     bitisKontrol();
   }
@@ -268,7 +283,27 @@ const BlokPatlat = (() => {
     tuval.width = Math.round(en * dpr);
     tuval.height = Math.round(boy * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    blokOnbellegiTemizle();   // hücre boyutu değişti, eski görseller geçersiz
+    izgarayiHazirla();
+    kutuyuTazele();
+    ekstraKare = 3;
     ciz();
+  }
+
+  /* Boş ızgarayı bir kez çizip hazır resim olarak sakla */
+  function izgarayiHazirla() {
+    const en = IZGARA * hucre;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    izgaraTuval = document.createElement("canvas");
+    izgaraTuval.width = Math.round(en * dpr);
+    izgaraTuval.height = Math.round(en * dpr);
+    const c = izgaraTuval.getContext("2d");
+    c.scale(dpr, dpr);
+    for (let r = 0; r < IZGARA; r++) {
+      for (let s = 0; s < IZGARA; s++) {
+        bosHucreCiz(c, s * hucre, r * hucre, hucre, izgaraRengi);
+      }
+    }
   }
 
   /* Bir tepsi yuvasının ölçüleri (tahta koordinatında) */
@@ -326,12 +361,8 @@ const BlokPatlat = (() => {
     ctx.save();
     ctx.translate(pay + sarsinti.x, pay + sarsinti.y);
 
-    // boş hücreler
-    for (let r = 0; r < IZGARA; r++) {
-      for (let s = 0; s < IZGARA; s++) {
-        if (tahta[r][s] === null) bosHucreCiz(ctx, s * hucre, r * hucre, hucre, izgaraRengi);
-      }
-    }
+    // boş ızgara: tek hazır resim olarak (dolu hücreler üstünü kapatıyor)
+    if (izgaraTuval) ctx.drawImage(izgaraTuval, 0, 0, en, en);
 
     // yerleşecek yerin önizlemesi
     let onizlemeHucreleri = null;
@@ -437,8 +468,8 @@ const BlokPatlat = (() => {
       const pEn = enAdet * b, pBoy = boyAdet * b;
       const merkezX = kutu.x + kutu.en / 2, merkezY = kutu.y + kutu.boy / 2;
 
-      // sığacak yeri kalmayan parçayı soluk göster
-      const alfa = biryereSigarMi(parca.sekil) ? 1 : 0.32;
+      // sığacak yeri kalmayan parçayı soluk göster (önbellekten)
+      const alfa = tepsiSigar[i] ? 1 : 0.32;
 
       ctx.save();
       ctx.translate(merkezX, merkezY);
@@ -469,14 +500,19 @@ const BlokPatlat = (() => {
     ctx.scale(1.06, 1.06);
     ctx.translate(-k.en / 2, -k.boy / 2);
 
-    // gölge (blokların altına)
+    /* Gölge: shadowBlur telefonda çok pahalı olduğu için bulanıklık yerine
+       hafif kaydırılmış koyu bir katman kullanıyoruz — aynı "havada duruyor"
+       hissini veriyor, maliyeti neredeyse sıfır. */
     ctx.save();
-    ctx.shadowColor = "rgba(120, 76, 92, 0.45)";
-    ctx.shadowBlur = hucre * 0.5;
-    ctx.shadowOffsetY = hucre * 0.2;
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = "rgba(120, 76, 92, 0.22)";
     for (const [r, s] of hucreler) {
-      yuvarlakYol(ctx, s * hucre + 2, r * hucre + 2, hucre - 4, hucre - 4, hucre * 0.17);
+      yuvarlakYol(
+        ctx,
+        s * hucre + hucre * 0.06,
+        r * hucre + hucre * 0.16,
+        hucre * 0.88, hucre * 0.88,
+        hucre * 0.17
+      );
       ctx.fill();
     }
     ctx.restore();
@@ -506,20 +542,40 @@ const BlokPatlat = (() => {
     const fark = Math.min(zaman - sonZaman || 0, 100);
     sonZaman = zaman;
     guncelle(fark);
-    ciz();
+
+    /* Ekranda hareket eden bir şey yoksa yeniden çizmiyoruz — tuval son
+       kareyi zaten gösteriyor. Boşta pil yakmıyor, sürüklerken de tüm
+       kare bütçesi harekete kalıyor. */
+    const hareketVar = suruklenen || patlama || yerlesme || tepsiGiris > 0 || !Efektler.bosMu();
+    if (hareketVar) ekstraKare = 3;
+    if (hareketVar || ekstraKare > 0) {
+      ciz();
+      if (!hareketVar) ekstraKare--;
+    }
+
     raf = requestAnimationFrame(dongu);
   }
 
   /* ------------------------- sürükleme ------------------------- */
 
+  /* Tuvalin ekrandaki yeri sürükleme boyunca sabit — her parmak
+     hareketinde getBoundingClientRect çağırmak tarayıcıyı boşuna
+     yeniden yerleşim hesabına zorluyordu. */
+  let tuvalKutusu = null;
+
+  function kutuyuTazele() {
+    tuvalKutusu = tuval ? tuval.getBoundingClientRect() : null;
+  }
+
   function tuvalKonumu(e) {
-    const k = tuval.getBoundingClientRect();
+    const k = tuvalKutusu || tuval.getBoundingClientRect();
     return { x: e.clientX - k.left - pay, y: e.clientY - k.top - pay };
   }
 
   function basildi(e) {
     if (bitti || patlama) return;
     Ses.uyandir();
+    kutuyuTazele();
     const { x, y } = tuvalKonumu(e);
     if (y < tepsiUst) return;
 
@@ -579,6 +635,7 @@ const BlokPatlat = (() => {
     suruklenen = null;
     Efektler.temizle();
     tepsiyiDoldur();
+    ekstraKare = 3;
     document.getElementById("blokKatman").classList.remove("acik");
     bilgiGuncelle();
     boyutlandir();
@@ -601,6 +658,7 @@ const BlokPatlat = (() => {
         if (e.touches && e.touches.length === 0 && suruklenen) iptal();
       });
       window.addEventListener("blur", iptal);
+      window.addEventListener("scroll", kutuyuTazele, { passive: true });
 
       document.getElementById("blokYeni").addEventListener("click", () => { Ses.tik(); yeniOyun(); });
       document.getElementById("blokKatmanDugme").addEventListener("click", () => { Ses.tik(); yeniOyun(); });

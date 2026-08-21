@@ -117,6 +117,15 @@ body {
   .arka-plan { display: none; }
 }
 
+/* Oyun oynarken polaroidler dursun.
+   Sürekli hareket eden bu katman, üstündeki bulanık başlık şeridini her
+   karede yeniden hesaplatıyor ve telefonda oyunu tekletiyordu. Menüde
+   süzülmeye devam ediyorlar, oyun ekranında donuyorlar. */
+body.oyunda .polaroid {
+  animation-play-state: paused;
+  will-change: auto;          /* oyun sırasında ayrı katman tutmasınlar */
+}
+
 /* ------------------------- üst şerit ------------------------- */
 
 .ust-serit {
@@ -130,6 +139,16 @@ body {
   backdrop-filter: blur(14px);
   background: rgba(255, 250, 246, 0.8);
   border-bottom: 1px solid var(--kart-kenar);
+}
+
+/* Dokunmatik cihazlarda bulanıklık yok: arkasından geçen her şey için
+   yeniden hesaplanıyor ve oyun sırasında kare düşmesine yol açıyor.
+   Yerine neredeyse opak bir zemin — görünüş neredeyse aynı. */
+@media (pointer: coarse) {
+  .ust-serit {
+    backdrop-filter: none;
+    background: rgba(255, 250, 246, 0.97);
+  }
 }
 
 .ust-serit .marka {
@@ -689,10 +708,10 @@ main { position: relative; z-index: 1; }
     bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     z-index: 20;
   }
-  /* Tahtanın üstüne denk gelebileceği için tuşlar biraz daha dolu görünsün */
+  /* Tahtanın üstüne denk gelebileceği için tuşlar biraz daha dolu görünsün.
+     (Burada da backdrop-filter yok — oyun sırasında pahalıya mal oluyor.) */
   .dokunmatik button {
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(8px);
+    background: #fff;
     box-shadow: 0 6px 18px rgba(150, 100, 120, 0.3);
   }
 }
@@ -898,9 +917,19 @@ main { position: relative; z-index: 1; }
     gap: 8px;
     order: -1;
   }
-  .tetris-yan .bilgi-kutu { flex: 1 1 70px; }
-  #siradakiTuval { width: 84px; height: 50px; flex: none; }
+  /* dört kutu + sıradaki parça tek satıra sığsın; iki satıra taşarsa
+     tahtaya kalan yükseklik azalıyor ve bloklar küçülüyor */
+  .tetris-yan .bilgi-kutu { flex: 1 1 52px; min-width: 0; }
+  #siradakiTuval { width: 62px; height: 46px; flex: none; }
   .tuslar { display: none; }
+
+  #sayfa-tetris .hedef-serit,
+  #sayfa-blokpatlat .hedef-serit {
+    padding: 5px 12px 5px 7px;
+    font-size: 12px;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
 
   /* Tetris ekranı tek ekrana sığsın diye üst kısmı sıkıştır */
   #sayfa-tetris { padding-top: 10px; padding-bottom: 16px; }

@@ -91,8 +91,8 @@ const Efektler = (() => {
       c.translate(p.x, p.y);
       c.rotate(p.aci);
       const yari = p.boyut / 2;
-      yuvarlakYol(c, -yari, -yari, p.boyut, p.boyut, Math.max(2, p.boyut * 0.2));
-      c.clip();
+      // Not: kırpma yok — uçuşan minik kırıkta yuvarlak köşe fark edilmiyor
+      // ama 200+ parçacıkta kare başına 200 kırpma telefonu zorluyordu.
       if (img && img.complete && img.naturalWidth) {
         c.drawImage(img, -yari, -yari, p.boyut, p.boyut);
       } else {
