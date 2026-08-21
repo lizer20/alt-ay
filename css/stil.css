@@ -289,6 +289,212 @@ main { position: relative; z-index: 1; }
   color: var(--pembe-koyu);
 }
 
+/* ------------------------- ŞAKAYIK BAHÇESİ ------------------------- */
+
+/* üst şeritteki sayaç */
+.bahce-sayac {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid var(--kart-kenar);
+  border-radius: 999px;
+  padding: 5px 13px 5px 8px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--pembe-koyu);
+  box-shadow: var(--golge-hafif);
+  flex: none;
+}
+.bahce-sayac .sakayik { display: block; }
+.bahce-sayac.artti { animation: sayacZipla 0.75s cubic-bezier(0.2, 1.5, 0.4, 1); }
+@keyframes sayacZipla {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35) rotate(-6deg); }
+  60%  { transform: scale(0.96) rotate(3deg); }
+  100% { transform: scale(1); }
+}
+
+/* menüdeki bahçe kartı */
+.bahce-kart {
+  margin-top: 26px;
+  background: var(--kart);
+  border: 1px solid var(--kart-kenar);
+  border-radius: var(--yuvarlak);
+  box-shadow: var(--golge-hafif);
+  padding: 18px 20px 20px;
+}
+.bahce-baslik {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.bahce-baslik h3 { margin: 0; font-size: 18px; }
+.bahce-rozet {
+  background: #fdeef3;
+  border: 1px solid rgba(224, 87, 127, 0.28);
+  color: var(--pembe-koyu);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bahce-cicekler {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 44px;
+  align-items: center;
+}
+.bahce-cicekler .cicek {
+  display: block;
+  line-height: 0;
+  animation: cicekAc 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
+}
+.bahce-cicekler .cicek.bos { opacity: 0.55; animation: none; }
+@keyframes cicekAc {
+  from { transform: scale(0) rotate(-40deg); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+.cicek-fazla {
+  align-self: center;
+  color: var(--pembe-koyu);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 0 8px;
+}
+
+/* bahçe kartı tıklanabilir */
+.bahce-kart {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.25s, border-color 0.2s;
+}
+.bahce-kart:hover, .bahce-kart:focus-visible {
+  transform: translateY(-3px);
+  border-color: rgba(224, 87, 127, 0.45);
+  box-shadow: var(--golge);
+  outline: none;
+}
+.bahce-baslik .bosluk { flex: 1; }
+.bahce-ac { color: var(--pembe-koyu); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.bahce-sayac { cursor: pointer; }
+.bahce-sayac:hover { border-color: rgba(224, 87, 127, 0.45); }
+
+/* bahçe ekranı */
+.bahce-manzara {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  line-height: 0;
+}
+#bahceTuval {
+  display: block;
+  border-radius: var(--yuvarlak);
+  border: 1px solid var(--kart-kenar);
+  box-shadow: var(--golge);
+}
+.bahce-bos-yazi {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--kart-kenar);
+  border-radius: 999px;
+  padding: 9px 20px;
+  font-size: 14px;
+  color: var(--metin);
+  line-height: 1.4;
+  box-shadow: var(--golge-hafif);
+  white-space: nowrap;
+}
+.bahce-alt-not {
+  text-align: center;
+  color: var(--soluk);
+  font-size: 13.5px;
+  margin: 14px 0 0;
+}
+
+.bahce-not { margin: 12px 0 0; color: var(--soluk); font-size: 13px; }
+.bahce-kural { margin: 8px 0 0; color: var(--soluk); font-size: 12.5px; line-height: 1.6; }
+.bahce-kural b { color: var(--metin); }
+
+/* kazanınca çıkan bildirim */
+.bahce-bildirim {
+  position: fixed;
+  left: 50%;
+  top: 78px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid rgba(224, 87, 127, 0.3);
+  border-radius: 18px;
+  padding: 12px 20px 12px 14px;
+  box-shadow: var(--golge);
+  animation: bildirimGir 0.55s cubic-bezier(0.2, 1.5, 0.4, 1) both,
+             bildirimCik 0.5s ease 3s both;
+}
+.bahce-bildirim b { display: block; font-size: 15px; }
+.bahce-bildirim span { display: block; color: var(--soluk); font-size: 12.5px; }
+.bahce-bildirim .sakayik { animation: cicekDon 0.9s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes bildirimGir {
+  from { transform: translate(-50%, -26px); opacity: 0; }
+  to   { transform: translate(-50%, 0); opacity: 1; }
+}
+@keyframes bildirimCik {
+  to { transform: translate(-50%, -18px); opacity: 0; }
+}
+@keyframes cicekDon {
+  from { transform: scale(0.2) rotate(-140deg); }
+  to   { transform: none; }
+}
+
+/* oyun sayfalarındaki hedef şeridi */
+.hedef-serit {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: #fff;
+  border: 1px solid var(--kart-kenar);
+  border-radius: 999px;
+  padding: 7px 16px 7px 9px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--soluk);
+  box-shadow: var(--golge-hafif);
+}
+.hedef-serit .cicek-simge { line-height: 0; flex: none; }
+.hedef-serit .metin { flex: none; }
+.hedef-serit .cubuk {
+  flex: 1;
+  min-width: 60px;
+  height: 7px;
+  background: rgba(120, 76, 92, 0.13);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.hedef-serit .dolgu {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--gul), var(--pembe));
+  transition: width 0.35s ease;
+}
+.hedef-serit.tamam {
+  border-color: rgba(176, 125, 36, 0.5);
+  background: #fdf6e6;
+  color: var(--altin);
+  font-weight: 600;
+}
+.hedef-serit.tamam .dolgu { background: linear-gradient(90deg, var(--altin), #e8c46a); }
+
 .dip-not {
   margin-top: 34px;
   text-align: center;
