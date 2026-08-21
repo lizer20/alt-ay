@@ -491,6 +491,51 @@ main { position: relative; z-index: 1; }
   }
 }
 
+/* ------------------------- BLOK PATLAT ------------------------- */
+
+.blok-sahne { display: flex; justify-content: center; }
+
+.blok-tahta {
+  position: relative;
+  border-radius: var(--yuvarlak);
+  border: 1px solid var(--kart-kenar);
+  background: var(--oyun-zemin);
+  box-shadow: var(--golge), inset 0 2px 12px rgba(120, 76, 92, 0.13);
+  padding: 6px;
+  line-height: 0;
+}
+#blokTuval {
+  display: block;
+  /* sürüklerken sayfa kaymasın */
+  touch-action: none;
+}
+
+.ipucu {
+  text-align: center;
+  color: var(--soluk);
+  font-size: 13px;
+  margin: 14px 0 0;
+}
+
+/* kombo devam ederken sayacın canlanması */
+.bilgi-kutu .deger.alevli {
+  color: var(--pembe);
+  animation: komboNabzi 0.7s ease-in-out infinite;
+}
+@keyframes komboNabzi {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18); }
+}
+
+/* menü kartındaki önizleme: kısmen dolu bir tahta gibi */
+.onizleme.blok {
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 5px;
+}
+.onizleme.blok img:nth-child(4) { opacity: 0.25; filter: grayscale(1); }
+.onizleme.blok img:nth-child(5) { opacity: 0.25; filter: grayscale(1); }
+
 /* ------------------------- HAFIZA ------------------------- */
 
 .hafiza-tahta {

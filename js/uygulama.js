@@ -6,6 +6,7 @@ const OYUNLAR = {
   tetris: Tetris,
   hafiza: Hafiza,
   yapboz: Yapboz,
+  blokpatlat: BlokPatlat,
 };
 
 let acikSayfa = "menu";
@@ -117,6 +118,9 @@ function rozetleriGuncelle() {
 
   const y = Yapboz.rekorMetni();
   document.getElementById("rozetYapboz").textContent = y ? "rekor " + y : "yeni";
+
+  const b = BlokPatlat.rekoruGetir();
+  document.getElementById("rozetBlok").textContent = b ? "rekor " + b : "yeni";
 }
 
 /* ------------------------- kurulum ------------------------- */

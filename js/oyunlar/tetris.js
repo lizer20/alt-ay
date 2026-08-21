@@ -47,55 +47,7 @@ const Tetris = (() => {
     if (izgara) izgaraRengi = izgara;
   }
 
-  /* ------------------------- çizim yardımcıları ------------------------- */
-
-  function yuvarlakYol(c, x, y, g, y2, r) {
-    c.beginPath();
-    if (c.roundRect) { c.roundRect(x, y, g, y2, r); return; }
-    c.moveTo(x + r, y);
-    c.arcTo(x + g, y, x + g, y + y2, r);
-    c.arcTo(x + g, y + y2, x, y + y2, r);
-    c.arcTo(x, y + y2, x, y, r);
-    c.arcTo(x, y, x + g, y, r);
-    c.closePath();
-  }
-
-  function hucreCiz(c, x, y, boyut, fotoIdx, alfa = 1) {
-    const bosluk = Math.max(1, boyut * 0.055);
-    const bx = x + bosluk / 2, by = y + bosluk / 2, bb = boyut - bosluk;
-    const r = Math.max(3, boyut * 0.17);
-    const img = TILE_IMG[fotoIdx % TILE_IMG.length];
-
-    c.save();
-    c.globalAlpha = alfa;
-    yuvarlakYol(c, bx, by, bb, bb, r);
-    c.clip();
-
-    if (img && img.complete && img.naturalWidth) {
-      c.drawImage(img, bx, by, bb, bb);
-    } else {
-      c.fillStyle = "#ff6b9d";
-      c.fillRect(bx, by, bb, bb);
-    }
-
-    // hafif hacim hissi — fotoğrafı boğmayacak kadar ince
-    const gr = c.createLinearGradient(bx, by, bx, by + bb);
-    gr.addColorStop(0, "rgba(255,255,255,0.16)");
-    gr.addColorStop(0.35, "rgba(255,255,255,0)");
-    gr.addColorStop(1, "rgba(0,0,0,0.22)");
-    c.fillStyle = gr;
-    c.fillRect(bx, by, bb, bb);
-    c.restore();
-
-    // Beyaz kenarlık: her blok küçük bir fotoğraf baskısı gibi dursun
-    c.save();
-    c.globalAlpha = alfa * 0.9;
-    yuvarlakYol(c, bx, by, bb, bb, r);
-    c.strokeStyle = "rgba(255,255,255,0.8)";
-    c.lineWidth = Math.max(1.2, boyut * 0.045);
-    c.stroke();
-    c.restore();
-  }
+  /* Blok çizimi js/blokcizim.js içinde (blokCiz) — Blok Patlat ile ortak */
 
   /* ------------------------- tahta / parça ------------------------- */
 
@@ -218,6 +170,25 @@ const Tetris = (() => {
 
   function satirlariKaldir() {
     const eskiSeviye = seviye;
+    const adet = temizlenenSatirlar.length;
+
+    // silinen hücreler fotoğraf kırıklarına ayrılsın
+    const parcacik = adet > 2 ? 3 : 5;
+    for (const r of temizlenenSatirlar) {
+      for (let s = 0; s < SUTUN; s++) {
+        if (tahta[r][s] !== null) {
+          Efektler.patlat(s * hucre, r * hucre, hucre, tahta[r][s], parcacik);
+        }
+      }
+    }
+    const kazanilan = PUANLAR[Math.min(adet, 4)] * seviye;
+    const ortaY = (temizlenenSatirlar.reduce((t, r) => t + r, 0) / adet) * hucre + hucre / 2;
+    Efektler.yaziEkle((SUTUN * hucre) / 2, ortaY, "+" + kazanilan, "#d13f6b", Math.max(20, hucre * 0.7));
+    if (adet >= 4) {
+      Efektler.yaziEkle((SUTUN * hucre) / 2, ortaY - hucre * 1.4, "TETRİS!", "#7f5cbd", Math.max(18, hucre * 0.6));
+    }
+    Efektler.sars(Math.min(3 + adet * 3, 14), 0.3);
+
     for (const r of temizlenenSatirlar) {
       tahta.splice(r, 1);
       tahta.unshift(new Array(SUTUN).fill(null));
@@ -324,6 +295,10 @@ const Tetris = (() => {
     // Tahtanın zemin rengi CSS'ten geliyor (.tetris-tahta), burada sadece siliyoruz
     ctx.clearRect(0, 0, g, y);
 
+    const sarsinti = Efektler.sarsintiOfseti();
+    ctx.save();
+    ctx.translate(sarsinti.x, sarsinti.y);
+
     // ızgara
     ctx.strokeStyle = izgaraRengi;
     ctx.lineWidth = 1;
@@ -336,7 +311,7 @@ const Tetris = (() => {
     for (let r = 0; r < SATIR; r++) {
       for (let s = 0; s < SUTUN; s++) {
         if (tahta[r][s] === null) continue;
-        hucreCiz(ctx, s * hucre, r * hucre, hucre, tahta[r][s]);
+        blokCiz(ctx, s * hucre, r * hucre, hucre, tahta[r][s]);
       }
     }
 
@@ -358,7 +333,7 @@ const Tetris = (() => {
             if (!parca.sekil[r][s]) continue;
             const yy = hy + r;
             if (yy < 0) continue;
-            hucreCiz(ctx, (parca.x + s) * hucre, yy * hucre, hucre, parca.foto, 0.3);
+            blokCiz(ctx, (parca.x + s) * hucre, yy * hucre, hucre, parca.foto, 0.3);
           }
         }
       }
@@ -368,10 +343,14 @@ const Tetris = (() => {
           if (!parca.sekil[r][s]) continue;
           const yy = parca.y + r;
           if (yy < 0) continue;
-          hucreCiz(ctx, (parca.x + s) * hucre, yy * hucre, hucre, parca.foto);
+          blokCiz(ctx, (parca.x + s) * hucre, yy * hucre, hucre, parca.foto);
         }
       }
     }
+
+    // fotoğraf kırıkları ve puan yazıları en üstte
+    Efektler.ciz(ctx);
+    ctx.restore();
   }
 
   function siradakiCiz() {
@@ -396,7 +375,7 @@ const Tetris = (() => {
     for (let r = minR; r <= maxR; r++) {
       for (let s = minS; s <= maxS; s++) {
         if (!sekil[r][s]) continue;
-        hucreCiz(sctx, ox + (s - minS) * b, oy + (r - minR) * b, b, siradaki.foto);
+        blokCiz(sctx, ox + (s - minS) * b, oy + (r - minR) * b, b, siradaki.foto);
       }
     }
   }
@@ -405,6 +384,7 @@ const Tetris = (() => {
 
   /* Oyunun bir adımı — geçen süre (ms) kadar ilerlet */
   function guncelle(fark) {
+    Efektler.guncelle(fark);
     if (duraklat || bitti) return;
 
     if (temizlenenSatirlar) {
@@ -544,6 +524,7 @@ const Tetris = (() => {
     duraklat = false; bitti = false;
     dusmeSayaci = 0; temizlenenSatirlar = null;
     yon = 0; asagiBasili = false;
+    Efektler.temizle();
     siradaki = yeniParca();
     parcaVer();
     katmanGizle();
@@ -589,6 +570,7 @@ const Tetris = (() => {
     document.removeEventListener("keyup", tusBirakildi);
     yon = 0;
     asagiBasili = false;
+    Efektler.temizle();
   }
 
   function rekoruGetir() {
