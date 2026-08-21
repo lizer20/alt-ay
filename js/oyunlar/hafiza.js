@@ -122,6 +122,7 @@ const Hafiza = (() => {
     const yeniRekor = !eski || sure < eski.sure;
     if (yeniRekor) Kayit.yaz(rekorAnahtari(), { sure, hamle });
     rekorGuncelle();
+    Bahce.topla("hafiza");
 
     document.getElementById("hafizaKatmanMetin").textContent =
       `${zorlukAdi[ciftSayisi]} · ${sureMetni(sure)} · ${hamle} hamle` +

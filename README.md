@@ -14,6 +14,33 @@ Kurulum yok, derleme yok, internet gerekmez — `index.html` dosyasına çift t�
 | 🧩 **Yapboz** | Bir fotoğraf seç, parçalara ayrılsın. İki parçaya tıklayarak yerlerini değiştir. 3×3 / 4×4 / 5×5. |
 | 🧱 **Blok Patlat** | 8×8 tahta. Alttaki üç parçayı sürükleyip tahtaya bırak; dolan satır ve sütunlar patlar. Arka arkaya patlatınca kombo çarpanı büyür. Üç parçanın da sığacak yeri kalmayınca oyun biter. |
 
+## 🌸 Şakayık Bahçesi
+
+Kazandığın her oyun menüdeki bahçeye bir şakayık ekler. Üst şeritteki sayaçtan
+toplam görünür, menüdeki bahçe kartında çiçekler tek tek açar.
+
+| Oyun | Şakayık için ne gerekiyor |
+|------|---------------------------|
+| Hafıza Kartları | Bütün çiftleri bul |
+| Yapboz | Yapbozu tamamla |
+| Tetris | 3. seviyeye ulaş (20 satır) |
+| Blok Patlat | 2000 puana ulaş |
+
+Tetris ve Blok Patlat'ta oyunu "bitirmek" mümkün olmadığı için hedef koyduk;
+ikisinin de oyun ekranında bir ilerleme çubuğu var, ne kadar kaldığını gösteriyor.
+Her oyunda en fazla bir şakayık kazanılır — hedefi geçip oynamaya devam etmek
+ikinci çiçek vermez, ama yeni oyun başlatınca tekrar kazanabilirsin.
+
+Hedefleri değiştirmek istersen `js/bahce.js` dosyasının en üstünde:
+
+```js
+const BLOK_CICEK_HEDEFI = 2000;   // Blok Patlat'ta gereken puan
+const TETRIS_CICEK_HEDEFI = 3;    // Tetris'te gereken seviye
+```
+
+> Bahçe de rekorlar gibi tarayıcının hafızasında tutuluyor — senin bahçenle
+> onun bahçesi ayrı büyür.
+
 ### Kontroller
 
 **Tetris (klavye)**
@@ -165,6 +192,7 @@ js/
   ayarlar.js               → başlık, fotoğraf listesi, küçük yardımcılar
   blokcizim.js             → fotoğraflı blokların çizimi (Tetris + Blok Patlat ortak)
   efektler.js              → patlama parçacıkları, uçuşan yazılar, ekran sarsıntısı
+  bahce.js                 → şakayık bahçesi (kazanma ödülleri, hedefler)
   ses.js                   → ses efektleri ve müzik
   uygulama.js              → menü ve sayfa geçişleri
   oyunlar/

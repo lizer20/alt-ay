@@ -132,6 +132,12 @@ const Ses = (() => {
 
     hata() { nota(200, 0.16, "sawtooth", 0.07); },
 
+    /* bahçeye şakayık eklenince çalan minik çan */
+    cicek() {
+      [784, 988, 1319, 1568].forEach((h, i) => nota(h, 0.3, "sine", 0.12, i * 0.09));
+      nota(2093, 0.5, "triangle", 0.06, 0.36);
+    },
+
     kazandin() {
       if (dosyaCal("kazandin", 0.8)) return;
       [523, 659, 784, 1047, 1319].forEach((h, i) =>

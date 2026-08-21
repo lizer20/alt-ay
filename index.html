@@ -16,6 +16,7 @@
   <button class="yuvarlak-dugme" id="geriDugmesi" title="Menüye dön" aria-label="Menüye dön">←</button>
   <div class="marka" id="marka">Rüveyda &amp; Emre</div>
   <div class="bosluk"></div>
+  <div class="bahce-sayac" id="bahceSayac" title="Şakayık bahçesi"></div>
   <button class="yuvarlak-dugme" id="muzikDugmesi" title="Müzik">🎵</button>
   <button class="yuvarlak-dugme" id="efektDugmesi" title="Ses efektleri">🔊</button>
 </header>
@@ -60,6 +61,23 @@
       </button>
     </div>
 
+    <section class="bahce-kart" id="bahceKart" role="button" tabindex="0" title="Bahçeyi aç">
+      <div class="bahce-baslik">
+        <h3>Şakayık Bahçemiz</h3>
+        <span class="bahce-rozet"><span id="bahceToplam">0</span> şakayık</span>
+        <span class="bosluk"></span>
+        <span class="bahce-ac">Bahçeyi gör →</span>
+      </div>
+      <div class="bahce-cicekler" id="bahceCicekler"></div>
+      <p class="bahce-not" id="bahceNot"></p>
+      <p class="bahce-kural">
+        Kazandığın her oyun bahçeye bir şakayık ekler —
+        <b>Hafıza</b> ve <b>Yapboz</b>'da oyunu bitirmek,
+        <b>Tetris</b>'te 3. seviyeye çıkmak,
+        <b>Blok Patlat</b>'ta 2000 puana ulaşmak yeter.
+      </p>
+    </section>
+
     <p class="dip-not">19 fotoğraf · ok tuşları veya dokunmatik · her şey bu klasörde 💞</p>
   </section>
 
@@ -72,6 +90,12 @@
         <button class="dugme" id="tetrisDuraklat">Duraklat</button>
         <button class="dugme ana" id="tetrisYeni">Yeni Oyun</button>
       </div>
+    </div>
+
+    <div class="hedef-serit" id="tetrisHedef">
+      <span class="cicek-simge"></span>
+      <span class="metin">3. seviyeye ulaş</span>
+      <span class="cubuk"><span class="dolgu"></span></span>
     </div>
 
     <div class="tetris-duzen">
@@ -189,6 +213,22 @@
     </div>
   </section>
 
+  <!-- ===================== BAHÇE ===================== -->
+  <section class="sayfa" id="sayfa-bahce">
+    <div class="oyun-basligi">
+      <h2>Şakayık Bahçemiz</h2>
+      <div class="bosluk"></div>
+      <span class="bahce-rozet"><span id="bahceEkranSayi">0</span> şakayık</span>
+    </div>
+
+    <div class="bahce-manzara">
+      <canvas id="bahceTuval" width="800" height="500"></canvas>
+      <p class="bahce-bos-yazi" id="bahceBosYazi">Bahçe henüz boş 🌱</p>
+    </div>
+
+    <p class="bahce-alt-not" id="bahceAltNot"></p>
+  </section>
+
   <!-- ===================== BLOK PATLAT ===================== -->
   <section class="sayfa" id="sayfa-blokpatlat">
     <div class="oyun-basligi">
@@ -201,6 +241,12 @@
       <div class="bilgi-kutu"><div class="etiket">Skor</div><div class="deger" id="blokSkor">0</div></div>
       <div class="bilgi-kutu"><div class="etiket">Rekor</div><div class="deger" id="blokRekor">0</div></div>
       <div class="bilgi-kutu"><div class="etiket">Kombo</div><div class="deger" id="blokKombo">—</div></div>
+    </div>
+
+    <div class="hedef-serit" id="blokHedef">
+      <span class="cicek-simge"></span>
+      <span class="metin">2000 puana ulaş</span>
+      <span class="cubuk"><span class="dolgu"></span></span>
     </div>
 
     <div class="sahne blok-sahne">
@@ -228,6 +274,8 @@
 <script src="js/blokcizim.js"></script>
 <script src="js/efektler.js"></script>
 <script src="js/ses.js"></script>
+<script src="js/bahce.js"></script>
+<script src="js/bahceekrani.js"></script>
 <script src="js/oyunlar/tetris.js"></script>
 <script src="js/oyunlar/hafiza.js"></script>
 <script src="js/oyunlar/yapboz.js"></script>

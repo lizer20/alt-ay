@@ -109,6 +109,7 @@ const Yapboz = (() => {
     const eski = Kayit.al(anahtar, null);
     const yeniRekor = !eski || sure < eski.sure;
     if (yeniRekor) Kayit.yaz(anahtar, { sure, hamle });
+    Bahce.topla("yapboz");
 
     document.getElementById("yapbozKatmanMetin").textContent =
       `${n}×${n} · ${sureMetni(sure)} · ${hamle} hamle` + (yeniRekor ? " · yeni rekor! 🏆" : "");

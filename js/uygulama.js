@@ -7,6 +7,7 @@ const OYUNLAR = {
   hafiza: Hafiza,
   yapboz: Yapboz,
   blokpatlat: BlokPatlat,
+  bahce: BahceEkrani,
 };
 
 let acikSayfa = "menu";
@@ -137,6 +138,7 @@ function kurulum() {
   onizlemeleriDoldur();
   kalbiCalistir();
   rozetleriGuncelle();
+  Bahce.arayuzuGuncelle();
 
   document.querySelectorAll(".oyun-kart").forEach((kart) => {
     kart.addEventListener("click", () => {
@@ -149,6 +151,15 @@ function kurulum() {
   document.getElementById("geriDugmesi").addEventListener("click", () => {
     Ses.tik();
     sayfaAc("menu");
+  });
+
+  /* Şakayıklara basınca bahçe açılır */
+  const bahceyiAc = () => { Ses.uyandir(); Ses.tik(); sayfaAc("bahce"); };
+  document.getElementById("bahceSayac").addEventListener("click", bahceyiAc);
+  const bahceKart = document.getElementById("bahceKart");
+  bahceKart.addEventListener("click", bahceyiAc);
+  bahceKart.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bahceyiAc(); }
   });
 
   document.addEventListener("keydown", (e) => {

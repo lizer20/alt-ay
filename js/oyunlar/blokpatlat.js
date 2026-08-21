@@ -46,6 +46,7 @@ const BlokPatlat = (() => {
   let tahta = [];
   let tepsi = [];              // 3 parça: {sekil, foto} veya null
   let skor = 0, kombo = 0;
+  let cicekVerildi = false;          // bu oyunda şakayık kazanıldı mı
   let rekor = Kayit.al("blokRekor", 0);
   let bitti = false, aktif = false, kuruldu = false;
   let raf = null, sonZaman = 0;
@@ -220,6 +221,21 @@ const BlokPatlat = (() => {
     const k = document.getElementById("blokKombo");
     k.textContent = kombo > 1 ? "×" + kombo : "—";
     k.classList.toggle("alevli", kombo > 1);
+
+    if (!cicekVerildi && skor >= BLOK_CICEK_HEDEFI) {
+      cicekVerildi = true;
+      Bahce.topla("blokpatlat");
+    }
+    if (cicekVerildi) {
+      Bahce.hedefGuncelle("blokHedef", "Şakayık kazanıldı!", 1, true);
+    } else {
+      Bahce.hedefGuncelle(
+        "blokHedef",
+        `Şakayık için ${BLOK_CICEK_HEDEFI} puan · ${skor}`,
+        skor / BLOK_CICEK_HEDEFI,
+        false
+      );
+    }
   }
 
   /* ------------------------- boyutlandırma ------------------------- */
@@ -556,6 +572,7 @@ const BlokPatlat = (() => {
     tahta = bosTahta();
     skor = 0;
     kombo = 0;
+    cicekVerildi = false;
     bitti = false;
     patlama = null;
     yerlesme = null;

@@ -34,6 +34,7 @@ const Tetris = (() => {
   let temizlenenSatirlar = null, temizlemeSayaci = 0;
   let yon = 0, dasSayaci = 0, asagiBasili = false, yumusakSayaci = 0;
   let sonFoto = -1;
+  let cicekVerildi = false;           // bu oyunda şakayık kazanıldı mı
   const basiliDokunmalar = new Map(); // pointerId -> basılı tutulan tuş
 
   /* Tuvalde kullanılan renkler de CSS'teki paletten okunuyor, böylece
@@ -197,6 +198,10 @@ const Tetris = (() => {
     satirSayisi += temizlenenSatirlar.length;
     seviye = Math.floor(satirSayisi / 10) + 1;
     if (seviye > eskiSeviye) Ses.seviye();
+    if (seviye >= TETRIS_CICEK_HEDEFI && !cicekVerildi) {
+      cicekVerildi = true;
+      Bahce.topla("tetris");
+    }
     temizlenenSatirlar = null;
     bilgiGuncelle();
     parcaVer();
@@ -224,6 +229,22 @@ const Tetris = (() => {
       Kayit.yaz("tetrisRekor", rekor);
     }
     document.getElementById("tetrisRekor").textContent = rekor;
+    hedefiGuncelle();
+  }
+
+  /* Şakayık hedefi: 3. seviye = 20 satır */
+  function hedefiGuncelle() {
+    const gerekenSatir = (TETRIS_CICEK_HEDEFI - 1) * 10;
+    if (cicekVerildi) {
+      Bahce.hedefGuncelle("tetrisHedef", "Şakayık kazanıldı!", 1, true);
+    } else {
+      Bahce.hedefGuncelle(
+        "tetrisHedef",
+        `Şakayık için ${TETRIS_CICEK_HEDEFI}. seviye · ${satirSayisi}/${gerekenSatir} satır`,
+        satirSayisi / gerekenSatir,
+        false
+      );
+    }
   }
 
   function katmanGoster(baslik, metin, dugme, skorGoster = false) {
@@ -521,6 +542,7 @@ const Tetris = (() => {
     tahta = bosTahta();
     torba = [];
     skor = 0; satirSayisi = 0; seviye = 1;
+    cicekVerildi = false;
     duraklat = false; bitti = false;
     dusmeSayaci = 0; temizlenenSatirlar = null;
     yon = 0; asagiBasili = false;
