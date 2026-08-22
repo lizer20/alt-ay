@@ -12,6 +12,11 @@
    Çok yükseltirsen hassas yerleştirme zorlaşır. Farede hep 1 kalır. */
 const BLOK_SURUKLEME_KAZANCI = 1.7;
 
+/* Parça tam denk gelmediğinde kaç hücre uzağa kadar yapışsın.
+   1 = bir hücre şaşırsan bile en yakın uyan yere oturur.
+   0 yaparsan tam isabet gerekir (eski davranış). */
+const BLOK_YAPISMA_YARICAPI = 1;
+
 const BlokPatlat = (() => {
   const IZGARA = 8;
   const TEPSI_ADET = 3;
@@ -395,9 +400,36 @@ const BlokPatlat = (() => {
     return { x, y, en, boy };
   }
 
+  /* Parçanın oturacağı hücre.
+
+     Önce en yakın hücreye yuvarlıyoruz. Orası uymuyorsa (dolu hücreye denk
+     geliyor ya da tahtadan taşıyor) çevredeki uyan konumlara bakıp en
+     yakınına yapışıyoruz. Böylece parçayı piksel piksel hizalamak
+     gerekmiyor — bir hücre şaşırmak hamleyi boşa harcatmıyor.
+     Nereye oturacağı önizlemede zaten görünüyor, sürpriz olmuyor. */
   function hedefHucre() {
     const k = suruklenenKonum();
-    return { satir: Math.round(k.y / hucre), sutun: Math.round(k.x / hucre) };
+    const hamSatir = k.y / hucre;
+    const hamSutun = k.x / hucre;
+    const satir = Math.round(hamSatir);
+    const sutun = Math.round(hamSutun);
+
+    const parca = tepsi[suruklenen.slot];
+    if (!parca || BLOK_YAPISMA_YARICAPI <= 0) return { satir, sutun };
+    if (sigarMi(parca.sekil, satir, sutun)) return { satir, sutun };
+
+    const y = BLOK_YAPISMA_YARICAPI;
+    let enIyi = null, enYakin = Infinity;
+    for (let dr = -y; dr <= y; dr++) {
+      for (let ds = -y; ds <= y; ds++) {
+        if (dr === 0 && ds === 0) continue;
+        const r = satir + dr, s = sutun + ds;
+        if (!sigarMi(parca.sekil, r, s)) continue;
+        const uzaklik = (r - hamSatir) ** 2 + (s - hamSutun) ** 2;
+        if (uzaklik < enYakin) { enYakin = uzaklik; enIyi = { satir: r, sutun: s }; }
+      }
+    }
+    return enIyi || { satir, sutun };
   }
 
   /* ------------------------- çizim ------------------------- */
