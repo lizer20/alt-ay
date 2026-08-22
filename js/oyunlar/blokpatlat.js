@@ -105,7 +105,36 @@ const BlokPatlat = (() => {
   }
 
   function tepsiyiDoldur() {
+    /* Tepsi patlama sürerken yenilenebiliyor. Birazdan silinecek hücreleri
+       geçici olarak boş sayıyoruz, yoksa tahtayı olduğundan dolu görüp
+       gereksiz yere en küçük parçaları veriyoruz. */
+    const gecici = [];
+    if (patlama) {
+      for (const [r, s] of patlama.hucreler) {
+        gecici.push([r, s, tahta[r][s]]);
+        tahta[r][s] = null;
+      }
+    }
+
     tepsi = Array.from({ length: TEPSI_ADET }, yeniParca);
+
+    /* En az bir parça tahtaya sığsın.
+       Tamamen rastgele üç parça bazen hiçbiri sığmayacak şekilde geliyor ve
+       oyun, aslında oynanabilecek bir hamle varken bitiyordu. Hiçbiri
+       sığmıyorsa rastgele bir yuvayı, sığanlar arasından seçilmiş bir
+       parçayla değiştiriyoruz — rastgeleliği en az bozan yol. */
+    if (!tepsi.some((p) => biryereSigarMi(p.sekil))) {
+      const uyanlar = SEKILLER.filter((s) => biryereSigarMi(s));
+      if (uyanlar.length) {
+        tepsi[rastgele(TEPSI_ADET)] = {
+          sekil: uyanlar[rastgele(uyanlar.length)].map((s) => s.slice()),
+          foto: rastgele(FOTOLAR.length),
+        };
+      }
+    }
+
+    for (const [r, s, deger] of gecici) tahta[r][s] = deger;   // geri koy
+
     tepsiGiris = TEPSI_GIRIS_SURESI;
     tepsiSigmaGuncelle();
   }
