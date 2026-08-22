@@ -13,7 +13,7 @@ const AYARLAR = {
   // Klasördeki fotoğraf sayısı.
   // Yeni fotoğraf eklersen (assets/tiles, assets/kare, assets/foto klasörlerinin
   // üçüne de aynı isimle) bu sayıyı artırman yeterli.
-  fotoSayisi: 24,
+  fotoSayisi: 30,
 };
 
 /* ---------------------------------------------------------

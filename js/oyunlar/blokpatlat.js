@@ -5,6 +5,13 @@
    Üç parçanın da sığacak yeri kalmayınca oyun biter.
    ========================================================= */
 
+/* Dokunmatikte parmak hareketi kaç katı büyütülsün.
+   1   = birebir (parmakla parça aynı yolu gider)
+   1.7 = parmağını 10 cm oynatınca parça 17 cm gider — tahtanın üst
+         sırasına ulaşmak için başparmağını ekran boyu sürüklemen gerekmez.
+   Çok yükseltirsen hassas yerleştirme zorlaşır. Farede hep 1 kalır. */
+const BLOK_SURUKLEME_KAZANCI = 1.7;
+
 const BlokPatlat = (() => {
   const IZGARA = 8;
   const TEPSI_ADET = 3;
@@ -312,16 +319,34 @@ const BlokPatlat = (() => {
     return { x: slot * yuvaEni, y: tepsiUst, en: yuvaEni, boy: tepsiYuksekligi };
   }
 
-  /* Sürüklenen parçanın sol üst köşesi (tahta koordinatında) */
+  /* Sürüklenen parçanın sol üst köşesi (tahta koordinatında).
+
+     Parmak hareketi "kazanç" ile büyütülüyor: parmağın tuttuğu noktadan
+     itibaren gittiği yolun katı kadar parça yol alıyor. Böylece küçük bir
+     başparmak hareketiyle tahtanın öbür ucuna ulaşılabiliyor. */
   function suruklenenKonum() {
-    const parca = tepsi[suruklenen.slot];
+    const s = suruklenen;
+    const parca = tepsi[s.slot];
     const en = sekilEni(parca.sekil) * hucre;
     const boy = sekilBoyu(parca.sekil) * hucre;
-    return {
-      x: suruklenen.x - en / 2,
-      y: suruklenen.y - (suruklenen.yukariKaydir ? boy + hucre * 0.35 : boy / 2),
-      en, boy,
-    };
+
+    const etkinX = s.baslangicX + (s.x - s.baslangicX) * s.kazanc;
+    const etkinY = s.baslangicY + (s.y - s.baslangicY) * s.kazanc;
+
+    let x = etkinX - en / 2;
+    let y = etkinY - (s.yukariKaydir ? boy + hucre * 0.35 : boy / 2);
+
+    /* Büyütülmüş hareketle parça tahtadan uçup gitmesin diye sınırla.
+       Pay yarım hücreden küçük: fazla ittirsen bile hedef hücre yuvarlanınca
+       tahtanın içinde kalıyor, yani parça kenara yapışıyor — yerleştirilemez
+       hale gelmiyor. Aşağıda tepsiye kadar inebilir ki parçayı geri
+       bırakıp vazgeçebilesin. */
+    const pay2 = hucre * 0.45;
+    const tahtaEn = IZGARA * hucre;
+    x = Math.min(Math.max(x, -pay2), tahtaEn - en + pay2);
+    y = Math.min(Math.max(y, -pay2), tepsiUst + tepsiYuksekligi - boy);
+
+    return { x, y, en, boy };
   }
 
   function hedefHucre() {
@@ -586,12 +611,15 @@ const BlokPatlat = (() => {
     e.preventDefault();
     try { tuval.setPointerCapture(e.pointerId); } catch { /* önemsiz */ }
 
+    const dokunmatik = e.pointerType === "touch";
     suruklenen = {
       slot,
       x, y,
+      baslangicX: x, baslangicY: y,        // hareketin ölçüleceği sıfır noktası
+      kazanc: dokunmatik ? BLOK_SURUKLEME_KAZANCI : 1,
       pointerId: e.pointerId,
       // dokunmatikte parça parmağın üstünde dursun ki görünsün
-      yukariKaydir: e.pointerType === "touch",
+      yukariKaydir: dokunmatik,
     };
     Ses.tik();
   }

@@ -3,6 +3,9 @@
    Aynı fotoğrafın iki kopyasını bul.
    ========================================================= */
 
+/* Oyun başında kartların ezberlemek için açık kaldığı süre (ms) */
+const HAFIZA_ONIZLEME_SURESI = 4000;
+
 const Hafiza = (() => {
   let tahta, ciftSayisi = Kayit.al("hafizaZorluk", 8);
   let acikKartlar = [];
@@ -150,14 +153,14 @@ const Hafiza = (() => {
     tahta.innerHTML = "";
     deste.forEach((fotoIdx, i) => tahta.appendChild(kartOlustur(fotoIdx, i)));
 
-    // kısa bir "önizleme": kartlar bir an açık başlasın
+    // ezberleme süresi: kartlar bir süre açık başlasın
     const kartlar = [...tahta.children];
     kartlar.forEach((k) => k.classList.add("acik"));
     kilit = true;
     setTimeout(() => {
       kartlar.forEach((k) => k.classList.remove("acik"));
       kilit = false;
-    }, 900);
+    }, HAFIZA_ONIZLEME_SURESI);
   }
 
   function baslat() {
