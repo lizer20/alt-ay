@@ -726,7 +726,9 @@ main { position: relative; z-index: 1; }
   border: 1px solid var(--kart-kenar);
   background: var(--oyun-zemin);
   box-shadow: var(--golge), inset 0 2px 12px rgba(120, 76, 92, 0.13);
-  padding: 6px;
+  /* dolgu yok: tuvalin kendi payı zaten çerçeve boşluğunu sağlıyor,
+     buraya ayrıca dolgu koymak hücrelerden yer çalıyordu */
+  padding: 0;
   line-height: 0;
 }
 #blokTuval {
@@ -735,21 +737,63 @@ main { position: relative; z-index: 1; }
   touch-action: none;
 }
 
+/* İpucu, tahtanın boş üst kısmında yüzen bir balon.
+   Akışta yer kaplamıyor (böylece tahtadan yükseklik çalmıyor) ve ilk
+   parça yerleştirilince kayboluyor. */
 .ipucu {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  margin: 0;
+  max-width: 90%;
   text-align: center;
   color: var(--soluk);
-  font-size: 13px;
-  margin: 14px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  background: rgba(255, 255, 255, 0.93);
+  border: 1px solid var(--kart-kenar);
+  border-radius: 16px;
+  padding: 8px 16px;
+  box-shadow: var(--golge-hafif);
+  pointer-events: none;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.ipucu.gizle {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px);
 }
 
-/* kombo devam ederken sayacın canlanması */
-.bilgi-kutu .deger.alevli {
-  color: var(--pembe);
-  animation: komboNabzi 0.7s ease-in-out infinite;
+/* Kombo: sürekli durmaz, sadece kombo yapınca kutuların üstünde belirip kaybolur */
+.blok-serit { position: relative; }
+.kombo-baloncuk {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 8;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  transform: translate(-50%, 0) scale(0.5);
+  background: linear-gradient(100deg, var(--pembe), var(--mor));
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  padding: 5px 15px;
+  border-radius: 999px;
+  box-shadow: 0 7px 20px rgba(209, 63, 107, 0.4);
 }
-@keyframes komboNabzi {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.18); }
+.kombo-baloncuk.gorun {
+  animation: komboBelir 1.35s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+}
+@keyframes komboBelir {
+  0%   { opacity: 0; transform: translate(-50%, 12px) scale(0.45); }
+  16%  { opacity: 1; transform: translate(-50%, -22px) scale(1.18); }
+  30%  {              transform: translate(-50%, -17px) scale(1); }
+  72%  { opacity: 1; transform: translate(-50%, -22px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -40px) scale(0.92); }
 }
 
 /* menü kartındaki önizleme: kısmen dolu bir tahta gibi */
@@ -922,6 +966,24 @@ main { position: relative; z-index: 1; }
   .tetris-yan .bilgi-kutu { flex: 1 1 52px; min-width: 0; }
   #siradakiTuval { width: 62px; height: 46px; flex: none; }
   .tuslar { display: none; }
+
+  /* Blok Patlat: her piksel hücrelere gitsin diye çevredeki her şey dar.
+     Küçük telefonlarda blokların gözü yormaması için tahtaya olabildiğince
+     çok yer bırakıyoruz. */
+  #sayfa-blokpatlat {
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 10px;
+    padding-bottom: 12px;
+  }
+  #sayfa-blokpatlat .oyun-basligi { margin-bottom: 8px; }
+  #sayfa-blokpatlat .oyun-basligi h2 { font-size: 18px; }
+  #sayfa-blokpatlat .dugme { padding: 7px 13px; font-size: 13px; }
+  #sayfa-blokpatlat .bilgi-serit { margin-bottom: 8px; }
+  #sayfa-blokpatlat .bilgi-kutu { padding: 5px 12px; }
+  #sayfa-blokpatlat .bilgi-kutu .etiket { font-size: 10px; }
+  #sayfa-blokpatlat .bilgi-kutu .deger { font-size: 16px; }
+  #sayfa-blokpatlat .ipucu { font-size: 11.5px; padding: 7px 13px; }
 
   #sayfa-tetris .hedef-serit,
   #sayfa-blokpatlat .hedef-serit {
