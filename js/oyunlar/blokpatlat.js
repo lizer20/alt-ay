@@ -133,6 +133,10 @@ const BlokPatlat = (() => {
     tepsi[slot] = null;
     Ses.dus();
 
+    // ilk hamleden sonra ipucu balonuna gerek yok
+    const ipucu = document.getElementById("blokIpucu");
+    if (ipucu) ipucu.classList.add("gizle");
+
     dolulariPatlat();
     if (tepsi.every((p) => p === null)) tepsiyiDoldur();
     else tepsiSigmaGuncelle();     // tahta değişti, sığma durumu da değişmiş olabilir
@@ -174,6 +178,17 @@ const BlokPatlat = (() => {
     patlama = { hucreler, sayac: PATLAMA_SURESI, toplam: PATLAMA_SURESI };
     Ses.satir(cizgi);
     patlamaEfektleri(hucreler, cizgi, kazanilan);
+    if (kombo > 1) komboBaloncugu(kombo);
+  }
+
+  /* Kombo sayısı kutuların üstünde bir an belirip kaybolur */
+  function komboBaloncugu(sayi) {
+    const b = document.getElementById("blokKombo");
+    if (!b) return;
+    b.textContent = "KOMBO ×" + sayi;
+    b.classList.remove("gorun");
+    void b.offsetWidth;          // animasyonu baştan başlat
+    b.classList.add("gorun");
   }
 
   /* Patlamanın görsel şenliği: fotoğraf kırıkları, yazılar, sarsıntı */
@@ -192,15 +207,13 @@ const BlokPatlat = (() => {
       en - hucre * 2
     );
     const hamY = (hucreler.reduce((t, h) => t + h[0], 0) / hucreler.length) * hucre + hucre / 2;
-    const ortaY = Math.min(Math.max(hamY, hucre * 2.6 + 46), en - hucre * 0.5);
+    const ortaY = Math.min(Math.max(hamY, hucre * 1.7 + 46), en - hucre * 0.5);
 
     Efektler.yaziEkle(ortaX, ortaY, "+" + kazanilan, "#d13f6b", Math.max(20, hucre * 0.62));
-    if (kombo > 1) {
-      Efektler.yaziEkle(ortaX, ortaY - hucre, "KOMBO ×" + kombo, "#b07d24", Math.max(17, hucre * 0.48));
-    }
+    // Kombo yazısı burada değil, kutuların üstündeki baloncukta gösteriliyor
     const ovgu = OVGULER.find((o) => cizgi >= o.esik);
     if (ovgu) {
-      Efektler.yaziEkle(ortaX, ortaY - hucre * 1.95, ovgu.metin, "#7f5cbd", Math.max(18, hucre * 0.54));
+      Efektler.yaziEkle(ortaX, ortaY - hucre * 1.05, ovgu.metin, "#7f5cbd", Math.max(18, hucre * 0.54));
     }
 
     Efektler.sars(Math.min(4 + cizgi * 3, 15), 0.3);
@@ -240,9 +253,6 @@ const BlokPatlat = (() => {
       Kayit.yaz("blokRekor", rekor);
     }
     document.getElementById("blokRekor").textContent = rekor;
-    const k = document.getElementById("blokKombo");
-    k.textContent = kombo > 1 ? "×" + kombo : "—";
-    k.classList.toggle("alevli", kombo > 1);
 
     if (!cicekVerildi && skor >= BLOK_CICEK_HEDEFI) {
       cicekVerildi = true;
@@ -266,17 +276,24 @@ const BlokPatlat = (() => {
     if (!tuval) return;
     const darEkran = window.innerWidth <= 760;
 
-    const kullanilabilirEn = Math.min(window.innerWidth - (darEkran ? 28 : 60), 470);
+    /* Tahtanın çevresindeki pay, parçacıkların dışarı taşabilmesi için.
+       Eskiden hücre boyutuyla orantılıydı (yarım hücre) ve hücrelerden
+       ciddi yer çalıyordu — küçük telefonlarda bloklar gereksiz küçük
+       kalıyordu. Artık sabit ve küçük. */
+    pay = 8;
+
+    const yatayKenar = darEkran ? 14 : 44;   // sayfa kenarı + çerçeve payı
+    const kullanilabilirEn = Math.min(window.innerWidth - yatayKenar, 470);
     const tahtaUst = tuval.parentElement.getBoundingClientRect().top + window.scrollY;
-    const kullanilabilirBoy = window.innerHeight - tahtaUst - (darEkran ? 28 : 50);
+    // ipucu balonu akışta yer kaplamıyor, hesaba katmaya gerek yok
+    const kullanilabilirBoy = window.innerHeight - tahtaUst - (darEkran ? 18 : 44);
 
-    // tuvalde tahtanın çevresinde bir pay var (parçacıklar taşabilsin diye):
-    // yatayda 1 hücre, dikeyde 1 hücre + tepsi (~2.6 hücre)
-    const hX = Math.floor(kullanilabilirEn / (IZGARA + 1));
-    const hY = Math.floor(kullanilabilirBoy / (IZGARA + 3.6));
-    hucre = Math.max(26, Math.min(hX, hY, 54));
+    // yatay: 8 hücre + iki yandan pay
+    const hX = Math.floor((kullanilabilirEn - pay * 2) / IZGARA);
+    // dikey: 8 hücre + ara boşluk (0.45) + tepsi (1.7) + iki uçtan pay
+    const hY = Math.floor((kullanilabilirBoy - pay * 2) / (IZGARA + 2.15));
+    hucre = Math.max(26, Math.min(hX, hY, 56));
 
-    pay = Math.round(hucre * 0.5);
     tepsiHucre = Math.round(hucre * 0.5);
     const bosluk = Math.round(hucre * 0.45);
     tepsiUst = IZGARA * hucre + bosluk;
@@ -664,6 +681,8 @@ const BlokPatlat = (() => {
     Efektler.temizle();
     tepsiyiDoldur();
     ekstraKare = 3;
+    const ipucu = document.getElementById("blokIpucu");
+    if (ipucu) ipucu.classList.remove("gizle");
     document.getElementById("blokKatman").classList.remove("acik");
     bilgiGuncelle();
     boyutlandir();
@@ -698,6 +717,10 @@ const BlokPatlat = (() => {
 
     aktif = true;
     yeniOyun();
+    /* Sayfa ilk açıldığında ipucu yazısının kaç satır saracağı henüz belli
+       olmuyor; düzen oturduktan sonra bir kez daha ölçüyoruz, yoksa küçük
+       ekranlarda tahta birkaç piksel büyük kalıp sayfayı kaydırıyor. */
+    requestAnimationFrame(() => { if (aktif) boyutlandir(); });
     sonZaman = performance.now();
     raf = requestAnimationFrame(dongu);
   }

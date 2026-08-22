@@ -237,10 +237,10 @@
       <button class="dugme ana" id="blokYeni">Yeni Oyun</button>
     </div>
 
-    <div class="bilgi-serit">
+    <div class="bilgi-serit blok-serit">
       <div class="bilgi-kutu"><div class="etiket">Skor</div><div class="deger" id="blokSkor">0</div></div>
       <div class="bilgi-kutu"><div class="etiket">Rekor</div><div class="deger" id="blokRekor">0</div></div>
-      <div class="bilgi-kutu"><div class="etiket">Kombo</div><div class="deger" id="blokKombo">—</div></div>
+      <span class="kombo-baloncuk" id="blokKombo" aria-live="polite"></span>
     </div>
 
     <div class="hedef-serit" id="blokHedef">
@@ -253,6 +253,8 @@
       <div class="blok-tahta">
         <canvas id="blokTuval" width="360" height="480"></canvas>
       </div>
+      <p class="ipucu" id="blokIpucu">Alttaki parçayı tut, tahtaya sürükle ve bırak.<br>Dolan satır ve sütunlar patlar.</p>
+
       <div class="katman" id="blokKatman">
         <div>
           <h3>Yer kalmadı! 🧱</h3>
@@ -262,8 +264,6 @@
         </div>
       </div>
     </div>
-
-    <p class="ipucu">Alttaki parçayı tut, tahtaya sürükle ve bırak. Dolan satır ve sütunlar patlar.</p>
   </section>
 
 </main>

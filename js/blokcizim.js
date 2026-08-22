@@ -74,7 +74,7 @@ function blokCiz(c, x, y, boyut, fotoIdx, alfa = 1) {
 
 /* Bloğun asıl çizimi — sadece önbellek doldurulurken çalışır */
 function _blokIcCiz(c, x, y, boyut, fotoIdx) {
-  const bosluk = Math.max(1, boyut * 0.055);
+  const bosluk = Math.max(1, boyut * 0.042);
   const bx = x + bosluk / 2, by = y + bosluk / 2, bb = boyut - bosluk;
   const r = Math.max(3, boyut * 0.17);
   const img = TILE_IMG[fotoIdx % TILE_IMG.length];
@@ -115,7 +115,7 @@ function _blokIcCiz(c, x, y, boyut, fotoIdx) {
 
 /* Boş hücre (oyun tahtasındaki çukur kare) */
 function bosHucreCiz(c, x, y, boyut, renk) {
-  const bosluk = Math.max(1, boyut * 0.055);
+  const bosluk = Math.max(1, boyut * 0.042);
   const bb = boyut - bosluk;
   c.save();
   yuvarlakYol(c, x + bosluk / 2, y + bosluk / 2, bb, bb, Math.max(3, boyut * 0.17));
